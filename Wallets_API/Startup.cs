@@ -18,6 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using Wallets_API.Authorization;
 using Wallets_API.Data;
 using Wallets_API.Models;
+using Wallets_API.Repository;
 
 namespace Wallets_API
 {
@@ -36,6 +37,8 @@ namespace Wallets_API
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(
                     Configuration.GetConnectionString("DefaultConnection")));
+            //TODO: понять для чего нужно это
+            services.AddScoped<IWalletRepository, WalletRepository>();
 
 
             //identity
@@ -90,13 +93,13 @@ namespace Wallets_API
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                //app.UseDeveloperExceptionPage();
             }
             else
             {
                 //app.UseHsts();
             }
-
+            app.UseAuthentication();
             //app.UseHttpsRedirection();
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseMvc();

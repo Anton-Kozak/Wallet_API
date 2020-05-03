@@ -98,7 +98,9 @@ namespace Wallets_API.Controllers
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.Now.AddDays(1),
-                SigningCredentials = creds
+                SigningCredentials = creds,
+                Issuer = AuthOptions.ISSUER,
+                Audience = AuthOptions.AUDIENCE
             };
 
             //var jwt = new JwtSecurityToken(

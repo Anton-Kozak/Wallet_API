@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Wallets_API.DBClasses;
 using Wallets_API.Models;
 
 namespace Wallets_API.Data{
@@ -15,5 +16,6 @@ namespace Wallets_API.Data{
             }
 
         //public DbSet<ApplicationUser> Users { get; set; }
+        public DbSet<Wallet> Wallets { get; set; }
     }
 }
