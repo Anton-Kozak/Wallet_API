@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Wallets_API.Data;
 
 namespace Wallets_API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200504102611_AddExpenseAndCategories")]
+    partial class AddExpenseAndCategories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -142,9 +144,9 @@ namespace Wallets_API.Migrations
 
                     b.Property<DateTime>("CreationDate");
 
-                    b.Property<int>("ExpenseCategoryId");
+                    b.Property<string>("ExpanseDescription");
 
-                    b.Property<string>("ExpenseDescription");
+                    b.Property<int>("ExpenseCategoryId");
 
                     b.Property<string>("ExpenseName");
 

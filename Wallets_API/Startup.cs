@@ -37,9 +37,9 @@ namespace Wallets_API
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(
                     Configuration.GetConnectionString("DefaultConnection")));
-            //TODO: понять для чего нужно это
+            //без этого он не видит сервисы которые мы внедряем в конструктор
             services.AddScoped<IWalletRepository, WalletRepository>();
-
+            services.AddScoped<IExpenseRepository, ExpenseRepository>();
 
             //identity
             IdentityBuilder builder = services.AddIdentityCore<ApplicationUser>(opt =>

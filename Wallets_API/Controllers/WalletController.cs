@@ -36,7 +36,11 @@ namespace Wallets_API.Controllers
                 var walletToSave = _mapper.Map<Wallet>(walletToCreate);
                 walletToSave.WalletCreatorID = userId;
                 if (await _repo.CreateWallet(walletToSave))
+                {
+                    currentUser.WalletID = walletToSave.Id;
                     return Ok("The wallet has been created!");
+
+                }
                 return BadRequest("Error with creating a wallet");
             }
             return Unauthorized();
