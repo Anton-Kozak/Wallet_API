@@ -16,12 +16,12 @@ namespace Wallets_API.Repository
             _context = context;
         }
 
-        public async Task<bool> CreateNewExpense(Expense newExpense)
+        public async Task<Expense> CreateNewExpense(Expense newExpense)
         {
             _context.Expenses.Add(newExpense);
             if (await _context.SaveChangesAsync() > 0)
-                return true;
-            return false;
+                return newExpense;
+            return null;
         }
 
         public async Task<IEnumerable<Expense>> ShowAllExpenses(int walletId)

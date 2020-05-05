@@ -8,11 +8,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Wallets_API.DBClasses;
+using Wallets_API.DTO;
 using Wallets_API.Models;
+using Wallets_API.Models.CustomModels;
 using Wallets_API.Repository;
 
 namespace Wallets_API.Controllers
 {
+    //TODO: сделать проверку на то, является ли пользователь тем кем нужно
     [Route("api/[controller]/{userId}/")]
     [ApiController]
     [Authorize]
@@ -38,7 +41,30 @@ namespace Wallets_API.Controllers
             {
                 var expenses = await _expenseRepository.ShowAllExpenses(user.WalletID);
                 if (expenses != null && expenses.Count() > 0)
-                    return Ok(expenses);
+                {
+                    ListOfExpensesLists list = new ListOfExpensesLists()
+                    {
+                        food = new List<Expense>(),
+                        entertainment = new List<Expense>(),
+                        housekeeping = new List<Expense>(),
+                    };
+                    foreach (var expense in expenses)
+                    {
+                        switch (expense.ExpenseCategoryId)
+                        {
+                            case 1:
+                                list.housekeeping.Add(expense);
+                                break;
+                            case 2:
+                                list.entertainment.Add(expense);
+                                break;
+                            case 3:
+                                list.food.Add(expense);
+                                break;
+                        }
+                    }
+                    return Ok(list);
+                }
                 else
                     return BadRequest("There is no expenses");
             }
@@ -52,8 +78,10 @@ namespace Wallets_API.Controllers
 
             if (user != null)
             {
-                if (await _expenseRepository.CreateNewExpense(newExpense))
-                    return Ok("Expense has been successfully created");
+                newExpense.ExpenseUserId = userId;
+                newExpense.FamilyWalletId = user.WalletID;
+                if (await _expenseRepository.CreateNewExpense(newExpense) != null)
+                    return Ok(newExpense);
                 return BadRequest("Something went wrong");
             }
             return BadRequest("Could not create an expense");

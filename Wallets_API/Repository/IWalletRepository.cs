@@ -11,5 +11,7 @@ namespace Wallets_API.Repository
     public interface IWalletRepository
     {
         Task<bool> CreateWallet(Wallet wallet);
+        Task<bool> InviteToWallet(string inviterId, string inviteeId, int walletId);
+        Task<bool> AcceptInvite(string userId);
     }
 }
