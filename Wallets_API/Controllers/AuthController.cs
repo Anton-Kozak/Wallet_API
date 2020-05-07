@@ -30,6 +30,13 @@ namespace Wallets_API.Controllers
             _mapper = mapper;
         }
 
+
+        //[HttpGet("getUser")]
+        //public async Task<IActionResult> GetUser()
+        //{
+        //    return _userManager.Users
+        //}
+
         [HttpPost("register")]
         public async Task<IActionResult> Register(UserForRegisterDTO userForRegister)
         {

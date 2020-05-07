@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Wallets_API.DBClasses;
-using Wallets_API.DTO;
 using Wallets_API.Models;
 using Wallets_API.Models.CustomModels;
 using Wallets_API.Repository;
@@ -35,56 +33,62 @@ namespace Wallets_API.Controllers
         [HttpGet]
         public async Task<IActionResult> ShowAllExpenses(string userId)
         {
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-            if(user != null)
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
-                var expenses = await _expenseRepository.ShowAllExpenses(user.WalletID);
-                if (expenses != null && expenses.Count() > 0)
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user != null)
                 {
-                    ListOfExpensesLists list = new ListOfExpensesLists()
+                    var expenses = await _expenseRepository.ShowAllExpenses(user.WalletID);
+                    if (expenses != null)
                     {
-                        food = new List<Expense>(),
-                        entertainment = new List<Expense>(),
-                        housekeeping = new List<Expense>(),
-                    };
-                    foreach (var expense in expenses)
-                    {
-                        switch (expense.ExpenseCategoryId)
+                        ListOfExpensesLists list = new ListOfExpensesLists()
                         {
-                            case 1:
-                                list.housekeeping.Add(expense);
-                                break;
-                            case 2:
-                                list.entertainment.Add(expense);
-                                break;
-                            case 3:
-                                list.food.Add(expense);
-                                break;
+                            food = new List<Expense>(),
+                            entertainment = new List<Expense>(),
+                            housekeeping = new List<Expense>(),
+                        };
+                        foreach (var expense in expenses)
+                        {
+                            switch (expense.ExpenseCategoryId)
+                            {
+                                case 1:
+                                    list.housekeeping.Add(expense);
+                                    break;
+                                case 2:
+                                    list.entertainment.Add(expense);
+                                    break;
+                                case 3:
+                                    list.food.Add(expense);
+                                    break;
+                            }
                         }
+                        return Ok(list);
                     }
-                    return Ok(list);
                 }
-                else
-                    return BadRequest("There is no expenses");
+                return BadRequest(null);
             }
-            return BadRequest("Could not get expenses");
+            return Unauthorized();
         }
 
         [HttpPost("new")]
         public async Task<IActionResult> CreateExpense(string userId, Expense newExpense)
         {
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user != null)
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
-                newExpense.ExpenseUserId = userId;
-                newExpense.FamilyWalletId = user.WalletID;
-                if (await _expenseRepository.CreateNewExpense(newExpense) != null)
-                    return Ok(newExpense);
-                return BadRequest("Something went wrong");
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user != null)
+                {
+                    newExpense.ExpenseUserId = userId;
+                    newExpense.FamilyWalletId = user.WalletID;
+                    if (await _expenseRepository.CreateNewExpense(newExpense) != null)
+                        return Ok(newExpense);
+                    return BadRequest("Something went wrong");
+                }
+                return BadRequest("Could not create an expense");
             }
-            return BadRequest("Could not create an expense");
+            return Unauthorized();
         }
 
     }

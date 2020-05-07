@@ -9,8 +9,8 @@ using Wallets_API.Data;
 namespace Wallets_API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20200505094036_AddWalletIdRequest")]
-    partial class AddWalletIdRequest
+    [Migration("20200506173655_AddInvites")]
+    partial class AddInvites
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -161,6 +161,26 @@ namespace Wallets_API.Migrations
                     b.ToTable("Expenses");
                 });
 
+            modelBuilder.Entity("Wallets_API.DBClasses.Invite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("InviteCreationTime");
+
+                    b.Property<string>("InviteCreatorId");
+
+                    b.Property<string>("InviteReceiverEmail");
+
+                    b.Property<int>("WalletId");
+
+                    b.Property<string>("WalletTitle");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Invites");
+                });
+
             modelBuilder.Entity("Wallets_API.DBClasses.Request", b =>
                 {
                     b.Property<int>("Id")
@@ -171,12 +191,6 @@ namespace Wallets_API.Migrations
                     b.Property<string>("RequestCreatorId");
 
                     b.Property<string>("RequestReceiverEmail");
-
-                    b.Property<string>("TargetName");
-
-                    b.Property<int>("WalletId");
-
-                    b.Property<string>("WalletTitle");
 
                     b.HasKey("Id");
 

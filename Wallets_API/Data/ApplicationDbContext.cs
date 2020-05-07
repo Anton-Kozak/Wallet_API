@@ -18,5 +18,6 @@ namespace Wallets_API.Data{
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
         public DbSet<Request> Requests { get; set; }
+        public DbSet<Invite> Invites { get; set; }
     }
 }

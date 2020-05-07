@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Wallets_API.DBClasses;
 using Wallets_API.DTO;
@@ -30,18 +31,20 @@ namespace Wallets_API.Controllers
         [HttpPost("{userId}/createwallet")]
         public async Task<IActionResult> CreateWallet(WalletToCreateDTO walletToCreate, string userId)
         {
-            var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            if (currentUser != null)
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
-                var walletToSave = _mapper.Map<Wallet>(walletToCreate);
-                walletToSave.WalletCreatorID = userId;
-                if (await _repo.CreateWallet(walletToSave))
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (currentUser != null)
                 {
-                    currentUser.WalletID = walletToSave.Id;
-                    return Ok("The wallet has been created!");
-
+                    var walletToSave = _mapper.Map<Wallet>(walletToCreate);
+                    walletToSave.WalletCreatorID = userId;
+                    if (await _repo.CreateWallet(walletToSave, currentUser))
+                    {
+                        return Ok(currentUser);
+                    }
+                    return BadRequest("Error with creating a wallet");
                 }
-                return BadRequest("Error with creating a wallet");
+                return BadRequest("No user has been found");
             }
             return Unauthorized();
         }

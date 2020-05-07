@@ -2,7 +2,7 @@
 
 namespace Wallets_API.Migrations
 {
-    public partial class AddWalletIdRequest : Migration
+    public partial class ChangeRequestAddWalletId : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

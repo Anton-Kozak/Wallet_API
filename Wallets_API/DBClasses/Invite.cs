@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 
 namespace Wallets_API.DBClasses
 {
-    public class Request
+    public class Invite
     {
         public int Id { get; set; }
-        public string RequestCreatorId { get; set; }
-        public string RequestReceiverEmail { get; set; }
+        public string InviteCreatorId { get; set; }
+        public string InviteReceiverEmail { get; set; }
         public DateTime InviteCreationTime { get; set; }
+        public string WalletTitle { get; set; }
         public int WalletId { get; set; }
     }
 }
