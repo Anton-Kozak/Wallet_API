@@ -16,7 +16,7 @@ namespace Wallets_API.Controllers
     //TODO: сделать проверку на то, является ли пользователь тем кем нужно
     [Route("api/[controller]/{userId}/")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "Member")]
     public class ExpenseController : ControllerBase
     {
 

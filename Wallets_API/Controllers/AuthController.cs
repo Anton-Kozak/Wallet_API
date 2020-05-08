@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -7,7 +8,6 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using Wallets_API.Authorization;
 using Wallets_API.DTO;
@@ -17,25 +17,35 @@ namespace Wallets_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [AllowAnonymous]
     public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IMapper _mapper;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IMapper mapper)
+        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IMapper mapper, RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _mapper = mapper;
+            _roleManager = roleManager;
+
         }
 
-
-        //[HttpGet("getUser")]
-        //public async Task<IActionResult> GetUser()
-        //{
-        //    return _userManager.Users
-        //}
+        private async Task CreateRoles()
+        {
+            if (!_roleManager.Roles.Any())
+            {
+                var role = new IdentityRole();
+                role.Name = "Admin";
+                var role2 = new IdentityRole();
+                role2.Name = "Member";
+                await _roleManager.CreateAsync(role);
+                await _roleManager.CreateAsync(role2);
+            }
+        }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(UserForRegisterDTO userForRegister)
@@ -50,6 +60,7 @@ namespace Wallets_API.Controllers
                 };
 
                 var result = await _userManager.CreateAsync(userToCreate, userForRegister.Password);
+                await _userManager.AddToRoleAsync(userToCreate, "Member");
 
                 if (result.Succeeded)
                 {
@@ -74,6 +85,15 @@ namespace Wallets_API.Controllers
             var result = await _signInManager.CheckPasswordSignInAsync(user, userForLoginDTO.Password, false);
             if (result.Succeeded)
             {
+                //await CreateRoles();
+                if (!await _roleManager.RoleExistsAsync("Member"))
+                {
+                    var role = new IdentityRole();
+                    role.Name = "Member";
+                    await _roleManager.CreateAsync(role);
+                }
+                if (!await _userManager.IsInRoleAsync(user, "Member"))
+                    await _userManager.AddToRoleAsync(user, "Member");
                 //TODO: возвращать пользователя с меньшим кол-вом данных (map)
                 return Ok(new
                 {

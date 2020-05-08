@@ -14,7 +14,7 @@ namespace Wallets_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "Member")]
     public class WalletController : ControllerBase
     {
         private readonly IWalletRepository _repo;
