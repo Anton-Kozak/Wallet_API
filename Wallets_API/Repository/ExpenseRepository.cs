@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Wallets_API.Data;
 using Wallets_API.DBClasses;
+using Wallets_API.DTO;
 
 namespace Wallets_API.Repository
 {
@@ -14,6 +15,21 @@ namespace Wallets_API.Repository
         public ExpenseRepository(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<BarExpensesDTO> CreateBarExpensesData(int walletId)
+        {
+            //TODO: проверить что будет если везде будет 0
+            var houseData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 1).SumAsync(e => e.MoneySpent);
+            var enterData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 2).SumAsync(e => e.MoneySpent);
+            var foodData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 3).SumAsync(e => e.MoneySpent);
+            BarExpensesDTO barExpenses = new BarExpensesDTO
+            {
+                HouseExpenses = houseData,
+                FoodExpenses = foodData,
+                EntertainmentExpenses = enterData
+            };
+            return barExpenses;
         }
 
         public async Task<Expense> CreateNewExpense(Expense newExpense)

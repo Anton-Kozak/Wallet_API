@@ -47,6 +47,8 @@ namespace Wallets_API.Controllers
                             food = new List<Expense>(),
                             entertainment = new List<Expense>(),
                             housekeeping = new List<Expense>(),
+                            clothes = new List<Expense>(),
+                            other = new List<Expense>(),
                         };
                         foreach (var expense in expenses)
                         {
@@ -87,6 +89,23 @@ namespace Wallets_API.Controllers
                     return BadRequest("Something went wrong");
                 }
                 return BadRequest("Could not create an expense");
+            }
+            return Unauthorized();
+        }
+
+
+        [HttpGet("barExpenses")]
+        public async Task<IActionResult> ShowBarExpensesData(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null && user.WalletID != 0)
+                {
+                    var result = await _expenseRepository.CreateBarExpensesData(user.WalletID);
+                    return Ok(result);
+                }
+                return BadRequest();
             }
             return Unauthorized();
         }
