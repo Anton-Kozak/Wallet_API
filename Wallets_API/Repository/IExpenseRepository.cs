@@ -12,5 +12,6 @@ namespace Wallets_API.Repository
         Task<IEnumerable<Expense>> ShowAllExpenses(int walletId);
         Task<Expense> CreateNewExpense(Expense newExpense);
         Task<BarExpensesDTO> CreateBarExpensesData(int walletId);
+        Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId);
     }
 }

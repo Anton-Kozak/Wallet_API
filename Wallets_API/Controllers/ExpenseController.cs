@@ -55,13 +55,19 @@ namespace Wallets_API.Controllers
                             switch (expense.ExpenseCategoryId)
                             {
                                 case 1:
-                                    list.housekeeping.Add(expense);
+                                    list.food.Add(expense);
                                     break;
                                 case 2:
-                                    list.entertainment.Add(expense);
+                                    list.housekeeping.Add(expense);
                                     break;
                                 case 3:
-                                    list.food.Add(expense);
+                                    list.clothes.Add(expense);
+                                    break;
+                                case 4:
+                                    list.entertainment.Add(expense);
+                                    break;
+                                case 5:
+                                    list.other.Add(expense);
                                     break;
                             }
                         }
@@ -106,6 +112,21 @@ namespace Wallets_API.Controllers
                     return Ok(result);
                 }
                 return BadRequest();
+            }
+            return Unauthorized();
+        }
+
+        [HttpGet("detailedStatistics")]
+        public async Task<IActionResult> GetDetailedUserStatistics(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null && user.WalletID != 0)
+                {
+                    var result = await _expenseRepository.DetailedUserStatistics(user.WalletID);
+                    return Ok(result);
+                }
             }
             return Unauthorized();
         }

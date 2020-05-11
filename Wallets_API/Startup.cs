@@ -37,7 +37,7 @@ namespace Wallets_API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(
+                options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
             //без этого он не видит сервисы которые мы внедряем в конструктор
             services.AddScoped<IWalletRepository, WalletRepository>();

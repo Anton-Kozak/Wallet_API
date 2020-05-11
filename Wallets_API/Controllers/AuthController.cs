@@ -58,7 +58,7 @@ namespace Wallets_API.Controllers
                     UserName = userForRegister.Username,
                     Email = userForRegister.Username + "@mail.com"
                 };
-
+                //TODO: seed roles
                 var result = await _userManager.CreateAsync(userToCreate, userForRegister.Password);
                 await _userManager.AddToRoleAsync(userToCreate, "Member");
 
