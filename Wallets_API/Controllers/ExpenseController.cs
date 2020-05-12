@@ -131,5 +131,23 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
+        [HttpGet("detailedCategoryStatistics/{categoryId}")]
+        public async Task<IActionResult> GetDetailedCategoryStatistics(string userId, int categoryId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                if (categoryId <= 0 || categoryId > 5)
+                    return BadRequest("Category is not found");
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null && user.WalletID != 0)
+                {
+                    var result = await _expenseRepository.DetailedCategoryStatistics(user.WalletID, categoryId, userId);
+                    return Ok(result);
+                }
+                return BadRequest("User or wallet is not found");
+            }
+            return Unauthorized();
+        }
+
     }
 }

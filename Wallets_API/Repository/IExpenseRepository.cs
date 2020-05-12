@@ -9,9 +9,10 @@ namespace Wallets_API.Repository
 {
     public interface IExpenseRepository
     {
-        Task<IEnumerable<Expense>> ShowAllExpenses(int walletId);
+        Task<List<Expense>> ShowAllExpenses(int walletId);
         Task<Expense> CreateNewExpense(Expense newExpense);
         Task<BarExpensesDTO> CreateBarExpensesData(int walletId);
         Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId);
+        Task<DetailedCategoryStatisticsDTO> DetailedCategoryStatistics(int walletId, int categoryId, string userId);
     }
 }
