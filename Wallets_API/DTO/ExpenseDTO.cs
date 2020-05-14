@@ -8,10 +8,9 @@ namespace Wallets_API.DTO
     public class ExpenseDTO
     {
         public string UserName { get; set; }
-        public int ExpenseId { get; set; }
         public string ExpenseTitle { get; set; }
+        public string ExpenseDescription { get; set; }
         public DateTime CreationDate { get; set; }
-        public double MoneySpend { get; set; }
-        public string CategoryTitle { get; set; }
+        public double MoneySpent { get; set; }
     }
 }

@@ -15,6 +15,7 @@ namespace Wallets_API.Helpers
         {
             CreateMap<ApplicationUser, UserToReturnAfterRegistrationDto>();
             CreateMap<WalletToCreateDTO, Wallet>();
+            CreateMap<ApplicationUser, UserForDisplayDTO>();
         }
     }
 }

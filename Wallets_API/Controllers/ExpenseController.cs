@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Wallets_API.DBClasses;
@@ -79,6 +78,32 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
+
+        [HttpGet("getCategoryExpenses/{categoryId}")]
+        public async Task<IActionResult> GetCategoryExpenses(string userId, int categoryId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                if (categoryId != 0)
+                {
+                    var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                    if (user != null)
+                    {
+                        var result = await _expenseRepository.ShowCategoryExpenses(user.WalletID, categoryId);
+                        if (result != null)
+                        {
+                            return Ok(result);
+                        }
+                    }
+                    return BadRequest("User has not been found");
+                }
+                return BadRequest("There is no category");
+
+            }
+
+            return Unauthorized();
+        }
+
         [HttpPost("new")]
         public async Task<IActionResult> CreateExpense(string userId, Expense newExpense)
         {
@@ -117,14 +142,14 @@ namespace Wallets_API.Controllers
         }
 
         [HttpGet("detailedStatistics")]
-        public async Task<IActionResult> GetDetailedUserStatistics(string userId)
+        public async Task<IActionResult> GetDetailedWalletStatistics(string userId)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID != 0)
                 {
-                    var result = await _expenseRepository.DetailedUserStatistics(user.WalletID);
+                    var result = await _expenseRepository.DetailedWalletStatistics(user.WalletID);
                     return Ok(result);
                 }
             }
@@ -147,6 +172,47 @@ namespace Wallets_API.Controllers
                 return BadRequest("User or wallet is not found");
             }
             return Unauthorized();
+        }
+
+        [HttpGet("detailedUserStatistics")]
+        public async Task<IActionResult> GetDetailedUserStatistics(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null && user.WalletID != 0)
+                {
+                    var result = await _expenseRepository.DetailedUserStatistics(user.WalletID, userId);
+                    if (result != null)
+                    {
+                        return Ok(result);
+                    }
+                    return BadRequest("Something went wrong");
+                }
+                return BadRequest("User or wallet is not found");
+            }
+            return Unauthorized();
+        }
+
+        [HttpGet("getUserExpenses/{userToDisplayId}")]
+        public async Task<IActionResult> GetUserExpenses(string userId, string userToDisplayId)
+        {
+            //if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userToDisplayId);
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null && user.WalletID == currentUser.WalletID)
+                {
+                    var result = await _expenseRepository.ShowUserExpenses(user.WalletID, userToDisplayId);
+                    if (result != null)
+                    {
+                        return Ok(result);
+                    }
+                }
+                return BadRequest("User has not been found");
+            }
+
+            //return Unauthorized();
         }
 
     }
