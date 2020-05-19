@@ -14,5 +14,7 @@ namespace Wallets_API.Models.CustomModels
         public List<Expense> entertainment { get; set; }
         public List<Expense> clothes { get; set; }
         public List<Expense> other { get; set; }
+        public string WalletTitle { get; set; }
+        public int? MonthlyLimit { get; set; }
     }
 }

@@ -35,6 +35,43 @@ namespace Wallets_API.Repository
             return false;
         }
 
+
+        public async Task<Wallet> GetCurrentWallet(int walletId)
+        {
+            var walletToEdit = await _context.Wallets.Where(w => w.Id == walletId).FirstOrDefaultAsync();
+            if (walletToEdit != null)
+            {
+                return walletToEdit;
+            }
+            return null;
+        }
+
+        public async Task<ResponseData> EditWallet(int walletId, WalletToReturnDTO walletToEdit)
+        {
+            ResponseData responseData = new ResponseData
+            {
+                isSuccessful = false,
+                Message = "No wallet has been found",
+            };
+            var wallet = await _context.Wallets.Where(w => w.Id == walletId).FirstOrDefaultAsync();
+            if (wallet != null)
+            {
+                wallet.Title = walletToEdit.Title;
+                wallet.MonthlyLimit = walletToEdit.MonthlyLimit;
+                _context.Wallets.Update(wallet);
+                if (await _context.SaveChangesAsync() > 0)
+                {
+                    responseData.isSuccessful = true;
+                    responseData.Message = "Edit was successful";
+                    return responseData;
+                }
+                responseData.Message = "Edit was not successful";
+                return responseData;
+            }
+            return responseData;
+
+        }
+
         //--------------------------------------INVITE---------------------------------------------
 
         public async Task<IEnumerable<InviteToReturnDTO>> GetInvites(string userId)

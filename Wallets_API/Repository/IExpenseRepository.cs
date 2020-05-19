@@ -11,6 +11,7 @@ namespace Wallets_API.Repository
     public interface IExpenseRepository
     {
         Task<List<Expense>> ShowAllExpenses(int walletId);
+        Task<WalletToReturnDTO> GetWalletData(int walletId);
         Task<List<ExpenseDTO>> ShowCategoryExpenses(int walletId, int categoryId);
         Task<Expense> CreateNewExpense(Expense newExpense);
         Task<BarExpensesDTO> CreateBarExpensesData(int walletId);

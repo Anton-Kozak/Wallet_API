@@ -13,6 +13,8 @@ namespace Wallets_API.Repository
     public interface IWalletRepository
     {
         Task<bool> CreateWallet(Wallet wallet, ApplicationUser user);
+        Task<Wallet> GetCurrentWallet(int walletId);
+        Task<ResponseData> EditWallet(int walletId, WalletToReturnDTO walletToEdit);
 
 
         Task<ResponseData> InviteToWallet(string inviterId, string inviteeEmail, int walletId);

@@ -64,6 +64,17 @@ namespace Wallets_API.Repository
             return listOfExpensesToReturn;
         }
 
+        public async Task<WalletToReturnDTO> GetWalletData(int walletId)
+        {
+            var walletTitle = await _context.Wallets.Where(w => w.Id == walletId).Select(w => w.Title).FirstOrDefaultAsync();
+            var walletLimit = await _context.Wallets.Where(w => w.Id == walletId).Select(w => w.MonthlyLimit).FirstOrDefaultAsync();
+            return new WalletToReturnDTO
+            {
+                Title = walletTitle,
+                MonthlyLimit = walletLimit,
+            };
+        }
+
         public async Task<List<ExpenseDTO>> ShowCategoryExpenses(int walletId, int categoryId)
         {
             if (walletId != 0 && categoryId != 0)
@@ -672,6 +683,6 @@ namespace Wallets_API.Repository
             return null;
         }
 
-      
+
     }
 }

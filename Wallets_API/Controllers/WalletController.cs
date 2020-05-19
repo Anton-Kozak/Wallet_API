@@ -12,7 +12,7 @@ using Wallets_API.Repository;
 
 namespace Wallets_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/{userId}/")]
     [ApiController]
     [Authorize(Policy = "Adult")]
     public class WalletController : ControllerBase
@@ -28,8 +28,8 @@ namespace Wallets_API.Controllers
             _mapper = mapper;
         }
 
-        [HttpPost("{userId}/createwallet")]
-        public async Task<IActionResult> CreateWallet(WalletToCreateDTO walletToCreate, string userId)
+        [HttpPost("createwallet")]
+        public async Task<IActionResult> CreateWallet([FromBody]WalletToCreateDTO walletToCreate, string userId)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
@@ -45,6 +45,45 @@ namespace Wallets_API.Controllers
                     return BadRequest("Error with creating a wallet");
                 }
                 return BadRequest("No user has been found");
+            }
+            return Unauthorized();
+        }
+
+        [HttpGet("getCurrentWallet")]
+        public async Task<IActionResult> GetCurrentWallet(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (currentUser != null)
+                {
+                    var wallet = await _repo.GetCurrentWallet(currentUser.WalletID);
+                    if (wallet != null && currentUser.WalletID != 0)
+                    {
+                        var walletToReturn = _mapper.Map<WalletToReturnDTO>(wallet);
+                        return Ok(walletToReturn);
+                    }
+                    return BadRequest("Wallet was not found");
+                }
+            }
+            return Unauthorized();
+        }
+
+        [HttpPut("editWallet")]
+        public async Task<IActionResult> GetCurrentWallet(string userId, WalletToReturnDTO walletToEdit)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (currentUser != null && currentUser.WalletID != 0)
+                {
+                    var results = await _repo.EditWallet(currentUser.WalletID, walletToEdit);
+                    if (results.isSuccessful)
+                    {
+                        return Ok(results.Message);
+                    }
+                    return BadRequest(results.Message);
+                }
             }
             return Unauthorized();
         }

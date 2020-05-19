@@ -5,15 +5,9 @@ using System.Threading.Tasks;
 
 namespace Wallets_API.DTO
 {
-    public class WalletToCreateDTO
+    public class WalletToReturnDTO
     {
         public string Title { get; set; }
-        public DateTime CreationDate { get; set; }
         public int MonthlyLimit { get; set; }
-
-        public WalletToCreateDTO()
-        {
-            CreationDate = DateTime.Now;
-        }
     }
 }

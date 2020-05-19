@@ -79,6 +79,28 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
+        [HttpGet("getNameAndLimit")]
+        public async Task<IActionResult> GetWalletTitleAndLimit(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null)
+                {
+                    var otherData = await _expenseRepository.GetWalletData(user.WalletID);
+                    if (otherData != null)
+                    {
+                        WalletToReturnDTO walletData = new WalletToReturnDTO();
+                        walletData.Title = otherData.Title;
+                        walletData.MonthlyLimit = otherData.MonthlyLimit;
+                        return Ok(walletData);
+                    }
+                }
+                return BadRequest("Could not retreive wallet's data");
+            }
+            return Unauthorized();
+        }
+
 
         [HttpGet("getCategoryExpenses/{categoryId}")]
         public async Task<IActionResult> GetCategoryExpenses(string userId, int categoryId)

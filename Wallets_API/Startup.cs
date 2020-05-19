@@ -43,6 +43,9 @@ namespace Wallets_API
             services.AddScoped<IWalletRepository, WalletRepository>();
             services.AddScoped<IExpenseRepository, ExpenseRepository>();
 
+
+            // 
+
             //identity
             IdentityBuilder builder = services.AddIdentityCore<ApplicationUser>(opt =>
             {
@@ -57,6 +60,7 @@ namespace Wallets_API
             builder.AddRoleValidator<RoleValidator<IdentityRole>>();
             builder.AddRoleManager<RoleManager<IdentityRole>>();
             builder.AddSignInManager<SignInManager<ApplicationUser>>();
+            
 
 
 
