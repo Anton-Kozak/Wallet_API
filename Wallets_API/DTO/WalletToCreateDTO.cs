@@ -9,6 +9,7 @@ namespace Wallets_API.DTO
     {
         public string Title { get; set; }
         public DateTime CreationDate { get; set; }
+        public int? MonthlyLimit { get; set; }
 
         public WalletToCreateDTO()
         {

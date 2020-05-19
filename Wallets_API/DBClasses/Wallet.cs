@@ -13,5 +13,6 @@ namespace Wallets_API.DBClasses
         public string Title { get; set; }
         public DateTime CreationDate { get; set; }
         public string WalletCreatorID { get; set; }
+        public int? MonthlyLimit { get; set; }
     }
 }

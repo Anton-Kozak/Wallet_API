@@ -90,7 +90,7 @@ namespace Wallets_API
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("Member", policy => policy.RequireRole("Member", "Admin"));
+                options.AddPolicy("Adult", policy => policy.RequireRole("Adult"));
                 options.AddPolicy("Only admin", policy => policy.RequireRole("Admin"));
                 options.AddPolicy("VipOnly", policy => policy.RequireRole("VIP"));
             });

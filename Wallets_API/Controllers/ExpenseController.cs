@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Wallets_API.DBClasses;
+using Wallets_API.DTO;
 using Wallets_API.Models;
 using Wallets_API.Models.CustomModels;
 using Wallets_API.Repository;
@@ -15,7 +16,7 @@ namespace Wallets_API.Controllers
     //TODO: сделать проверку на то, является ли пользователь тем кем нужно
     [Route("api/[controller]/{userId}/")]
     [ApiController]
-    [Authorize(Policy = "Member")]
+    //[Authorize(Policy = "Member")]
     public class ExpenseController : ControllerBase
     {
 
@@ -124,6 +125,43 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
+        [HttpDelete("expenseDelete/{expenseId}")]
+        public async Task<IActionResult> DeleteExpense(string userId, int expenseId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user != null)
+                {
+                    var result = await _expenseRepository.DeleteExpense(userId, expenseId);
+                    if (result.isSuccessful)
+                        return Ok(result.Message);
+                    return BadRequest(result.Message);
+                }
+                return BadRequest("No user hsa been found");
+            }
+            return Unauthorized();
+        }
+
+        [HttpPut("expenseEdit/{expenseId}")]
+        public async Task<IActionResult> DeleteExpense(string userId, int expenseId, ExpenseDTO expense)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user != null)
+                {
+                    var result = await _expenseRepository.EditExpense(userId, expense);
+                    if (result.isSuccessful)
+                        return Ok(result.Message);
+                    return BadRequest(result.Message);
+                }
+                return BadRequest("No user has been found");
+            }
+            return Unauthorized();
+        }
 
         [HttpGet("barExpenses")]
         public async Task<IActionResult> ShowBarExpensesData(string userId)
@@ -174,15 +212,16 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpGet("detailedUserStatistics")]
-        public async Task<IActionResult> GetDetailedUserStatistics(string userId)
+        [HttpGet("detailedUserStatistics/{userToShowId}")]
+        public async Task<IActionResult> GetDetailedUserStatistics(string userId, string userToShowId)
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            //if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
-                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-                if (user != null && user.WalletID != 0)
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userToShowId);
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null && user.WalletID != 0 && user.WalletID == currentUser.WalletID)
                 {
-                    var result = await _expenseRepository.DetailedUserStatistics(user.WalletID, userId);
+                    var result = await _expenseRepository.DetailedUserStatistics(user.WalletID, userToShowId);
                     if (result != null)
                     {
                         return Ok(result);
@@ -191,13 +230,12 @@ namespace Wallets_API.Controllers
                 }
                 return BadRequest("User or wallet is not found");
             }
-            return Unauthorized();
+            //return Unauthorized();
         }
 
         [HttpGet("getUserExpenses/{userToDisplayId}")]
         public async Task<IActionResult> GetUserExpenses(string userId, string userToDisplayId)
         {
-            //if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userToDisplayId);
                 var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -211,8 +249,6 @@ namespace Wallets_API.Controllers
                 }
                 return BadRequest("User has not been found");
             }
-
-            //return Unauthorized();
         }
 
     }

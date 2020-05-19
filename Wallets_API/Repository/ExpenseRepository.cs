@@ -85,8 +85,52 @@ namespace Wallets_API.Repository
             return null;
         }
 
-       
 
+        public async Task<ResponseData> DeleteExpense(string userId, int expenseId)
+        {
+            ResponseData data = new ResponseData
+            {
+                isSuccessful = false,
+                Message = "",
+            };
+            var expenseToDelete = await _context.Expenses.Where(e => e.Id == expenseId && e.ExpenseUserId == userId).FirstOrDefaultAsync();
+
+            if (expenseToDelete != null)
+            {
+                _context.Expenses.Remove(expenseToDelete);
+                await _context.SaveChangesAsync();
+                data.isSuccessful = true;
+                data.Message = "Expense has been successfully deleted";
+                return data;
+            }
+            data.Message = "Expense has not been found";
+            return data;
+        }
+
+        public async Task<ResponseData> EditExpense(string userId, ExpenseDTO expenseToEdit)
+        {
+            ResponseData data = new ResponseData
+            {
+                isSuccessful = false,
+                Message = "",
+            };
+            var expToEdit = await _context.Expenses.Where(e => e.Id == expenseToEdit.Id && e.ExpenseUserId == userId).FirstOrDefaultAsync();
+
+            if (expToEdit != null)
+            {
+                expToEdit.ExpenseName = expenseToEdit.ExpenseTitle;
+                expToEdit.ExpenseDescription = expenseToEdit.ExpenseDescription;
+                expToEdit.MoneySpent = expenseToEdit.MoneySpent;
+                expToEdit.CreationDate = expenseToEdit.CreationDate;
+                _context.Expenses.Update(expToEdit);
+                await _context.SaveChangesAsync();
+                data.isSuccessful = true;
+                data.Message = "Expense has been successfully edited";
+                return data;
+            }
+            data.Message = "Expense has not been found";
+            return data;
+        }
 
         //-----------------------------------------------wallet statistics-------------------------------------------------------------
 
@@ -606,6 +650,7 @@ namespace Wallets_API.Repository
             return lastMonths;
         }
 
+
         public async Task<List<ExpenseDTO>> ShowUserExpenses(int walletId, string userId)
         {
             if (walletId != 0 && userId != null)
@@ -616,6 +661,7 @@ namespace Wallets_API.Repository
                                       where e.FamilyWalletId == walletId && e.ExpenseUserId == userId
                                       select new ExpenseDTO
                                       {
+                                          Id = e.Id,
                                           ExpenseTitle = e.ExpenseName,
                                           ExpenseDescription = e.ExpenseDescription,
                                           CreationDate = e.CreationDate,
@@ -626,5 +672,6 @@ namespace Wallets_API.Repository
             return null;
         }
 
+      
     }
 }

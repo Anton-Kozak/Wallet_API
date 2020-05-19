@@ -7,6 +7,7 @@ namespace Wallets_API.DTO
 {
     public class ExpenseDTO
     {
+        public int Id { get; set; }
         public string UserName { get; set; }
         public string ExpenseTitle { get; set; }
         public string ExpenseDescription { get; set; }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Wallets_API.DBClasses;
 using Wallets_API.DTO;
+using Wallets_API.Models.CustomModels;
 
 namespace Wallets_API.Repository
 {
@@ -17,5 +18,7 @@ namespace Wallets_API.Repository
         Task<DetailedCategoryStatisticsDTO> DetailedCategoryStatistics(int walletId, int categoryId, string userId);
         Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId);
         Task<List<ExpenseDTO>> ShowUserExpenses(int walletId, string userId);
+        Task<ResponseData> DeleteExpense(string userId, int expenseId);
+        Task<ResponseData> EditExpense(string userId, ExpenseDTO expenseToEdit);
     }
 }

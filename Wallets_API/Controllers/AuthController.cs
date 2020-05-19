@@ -34,18 +34,7 @@ namespace Wallets_API.Controllers
 
         }
 
-        private async Task CreateRoles()
-        {
-            if (!_roleManager.Roles.Any())
-            {
-                var role = new IdentityRole();
-                role.Name = "Admin";
-                var role2 = new IdentityRole();
-                role2.Name = "Member";
-                await _roleManager.CreateAsync(role);
-                await _roleManager.CreateAsync(role2);
-            }
-        }
+
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(UserForRegisterDTO userForRegister)
@@ -58,9 +47,11 @@ namespace Wallets_API.Controllers
                     UserName = userForRegister.Username,
                     Email = userForRegister.Username + "@mail.com"
                 };
-                //TODO: seed roles
                 var result = await _userManager.CreateAsync(userToCreate, userForRegister.Password);
-                await _userManager.AddToRoleAsync(userToCreate, "Member");
+                if(await _roleManager.RoleExistsAsync(userForRegister.Role))
+                    await _userManager.AddToRoleAsync(userToCreate, userForRegister.Role);
+                else
+                    await _userManager.AddToRoleAsync(userToCreate, "Member");
 
                 if (result.Succeeded)
                 {
@@ -85,16 +76,6 @@ namespace Wallets_API.Controllers
             var result = await _signInManager.CheckPasswordSignInAsync(user, userForLoginDTO.Password, false);
             if (result.Succeeded)
             {
-                //await CreateRoles();
-                if (!await _roleManager.RoleExistsAsync("Member"))
-                {
-                    var role = new IdentityRole();
-                    role.Name = "Member";
-                    await _roleManager.CreateAsync(role);
-                }
-                if (!await _userManager.IsInRoleAsync(user, "Member"))
-                    await _userManager.AddToRoleAsync(user, "Member");
-                //TODO: возвращать пользователя с меньшим кол-вом данных (map)
                 return Ok(new
                 {
                     token = GenerateJWTToken(user).Result,
