@@ -14,20 +14,22 @@ namespace Wallets_API.Controllers
 {
     [Route("api/[controller]/{userId}/")]
     [ApiController]
-    [Authorize(Policy = "Adult")]
+
     public class WalletController : ControllerBase
     {
         private readonly IWalletRepository _repo;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMapper _mapper;
 
-        public WalletController(IWalletRepository repo, UserManager<ApplicationUser> userManager, IMapper mapper)
+        public WalletController(IWalletRepository repo, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMapper mapper)
         {
             _repo = repo;
             _userManager = userManager;
             _mapper = mapper;
+            _roleManager = roleManager;
         }
-
+        [Authorize(Policy = "Adult")]
         [HttpPost("createwallet")]
         public async Task<IActionResult> CreateWallet([FromBody]WalletToCreateDTO walletToCreate, string userId)
         {
@@ -40,6 +42,8 @@ namespace Wallets_API.Controllers
                     walletToSave.WalletCreatorID = userId;
                     if (await _repo.CreateWallet(walletToSave, currentUser))
                     {
+                        //TODO: сделать разлогинивание чтобы вступили в действия смена роли
+                        await _userManager.AddToRoleAsync(currentUser, "Admin");
                         return Ok(currentUser);
                     }
                     return BadRequest("Error with creating a wallet");
@@ -68,9 +72,9 @@ namespace Wallets_API.Controllers
             }
             return Unauthorized();
         }
-
+        [Authorize(Policy = "Adult")]
         [HttpPut("editWallet")]
-        public async Task<IActionResult> GetCurrentWallet(string userId, WalletToReturnDTO walletToEdit)
+        public async Task<IActionResult> EditWallet(string userId, WalletToReturnDTO walletToEdit)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {

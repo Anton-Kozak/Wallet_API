@@ -29,6 +29,8 @@ namespace Wallets_API.Repository
             if (await _context.SaveChangesAsync() > 0)
             {
                 user.WalletID = wallet.Id;
+                user.DateJoined = DateTime.Now;
+                user.IsWalletAdmin = true;
                 await _context.SaveChangesAsync();
                 return true;
             }
@@ -152,6 +154,7 @@ namespace Wallets_API.Repository
                 if (invite != null)
                 {
                     user.WalletID = walletId;
+                    user.DateJoined = DateTime.Now;
                     _context.Users.Update(user);
                     await _context.SaveChangesAsync();
                     responseData.isSuccessful = true;
@@ -275,6 +278,7 @@ namespace Wallets_API.Repository
                 if (request != null)
                 {
                     user.WalletID = walletId;
+                    user.DateJoined = DateTime.Now;
                     _context.Update(user);
                     await _context.SaveChangesAsync();
                     _context.Requests.Remove(request);

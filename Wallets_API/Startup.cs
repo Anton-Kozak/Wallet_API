@@ -17,6 +17,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Wallets_API.Authorization;
 using Wallets_API.Data;
 using Wallets_API.Models;
@@ -36,12 +38,19 @@ namespace Wallets_API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            //services.AddMvc().AddJsonOptions(options => {
+            //    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            //    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            //});
+
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
             //без этого он не видит сервисы которые мы внедряем в конструктор
             services.AddScoped<IWalletRepository, WalletRepository>();
             services.AddScoped<IExpenseRepository, ExpenseRepository>();
+            services.AddScoped<IAdminRepository, AdminRepository>();
 
 
             // 
@@ -95,7 +104,7 @@ namespace Wallets_API
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("Adult", policy => policy.RequireRole("Adult"));
-                options.AddPolicy("Only admin", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
                 options.AddPolicy("VipOnly", policy => policy.RequireRole("VIP"));
             });
 

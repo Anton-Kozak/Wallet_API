@@ -47,6 +47,7 @@ namespace Wallets_API.Controllers
                     UserName = userForRegister.Username,
                     Email = userForRegister.Username + "@mail.com"
                 };
+                //TODO: нужно ли здесь делать If?
                 var result = await _userManager.CreateAsync(userToCreate, userForRegister.Password);
                 if(await _roleManager.RoleExistsAsync(userForRegister.Role))
                     await _userManager.AddToRoleAsync(userToCreate, userForRegister.Role);
