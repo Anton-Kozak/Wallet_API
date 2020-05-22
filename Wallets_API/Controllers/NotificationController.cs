@@ -17,7 +17,6 @@ namespace Wallets_API.Controllers
     [ApiController]
     public class NotificationController : ControllerBase
     {
-
         private readonly INotificationRepository _repo;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -55,6 +54,22 @@ namespace Wallets_API.Controllers
                 {
                     var notes = await _repo.GetNotifications(currentUser);
                     return Ok(notes);
+                }
+                return BadRequest("error");
+            }
+            return Unauthorized();
+        }
+
+        [HttpDelete("deleteNotification")]
+        public async Task<IActionResult> DeleteNotification(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (currentUser != null && currentUser.WalletID != 0)
+                {
+                    await _repo.DeleteNotification(currentUser);
+                    return Ok();
                 }
                 return BadRequest("error");
             }

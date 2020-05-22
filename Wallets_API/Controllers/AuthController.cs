@@ -91,7 +91,8 @@ namespace Wallets_API.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName)
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim("hasWallet", user.WalletID.ToString() == "0" ? "false" : "true"),
             };
 
             var roles = await _userManager.GetRolesAsync(user);

@@ -9,7 +9,7 @@ using Wallets_API.Models;
 
 namespace Wallets_API.Repository
 {
-    public class NotificationRepository: INotificationRepository
+    public class NotificationRepository : INotificationRepository
     {
         private readonly ApplicationDbContext _context;
 
@@ -59,5 +59,25 @@ namespace Wallets_API.Repository
             return notificationsForUser;
         }
 
+        public async Task DeleteNotification(ApplicationUser user)
+        {
+            var notificationsToDelete = await _context.NotificationsUsers.Where(n => n.UserId == user.Id).ToListAsync();
+            if (notificationsToDelete.Count > 0)
+            {
+                _context.NotificationsUsers.RemoveRange(notificationsToDelete);
+                await _context.SaveChangesAsync();
+                foreach (var notification in notificationsToDelete)
+                {
+                    var notificationsWithTheSameID = await _context.NotificationsUsers.Where(n => n.NotificationId == notification.NotificationId).AnyAsync();
+                    if (!notificationsWithTheSameID)
+                    {
+                        var mainNotification = await _context.Notifications.Where(n => n.Id == notification.NotificationId).FirstOrDefaultAsync();
+                        _context.Notifications.Remove(mainNotification);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+            }
+        }
     }
 }
