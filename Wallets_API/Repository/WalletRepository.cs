@@ -58,6 +58,13 @@ namespace Wallets_API.Repository
             var wallet = await _context.Wallets.Where(w => w.Id == walletId).FirstOrDefaultAsync();
             if (wallet != null)
             {
+                var monthlyExpenses = await GetMonthlyExpenses(walletId);
+
+                if (walletToEdit.MonthlyLimit <= monthlyExpenses)
+                {
+                    responseData.Message = "You cannot set limit that exceeds your expenses!";
+                    return responseData;
+                }
                 wallet.Title = walletToEdit.Title;
                 wallet.MonthlyLimit = walletToEdit.MonthlyLimit;
                 _context.Wallets.Update(wallet);
@@ -72,6 +79,14 @@ namespace Wallets_API.Repository
             }
             return responseData;
 
+        }
+
+        private async Task<double> GetMonthlyExpenses(int walletId)
+        {
+            var today = DateTime.Today;
+            var currentMonth = new DateTime(today.Year, today.Month, 1);
+            var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
+            return await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(m => m.MoneySpent);
         }
 
         //--------------------------------------INVITE---------------------------------------------
@@ -236,8 +251,37 @@ namespace Wallets_API.Repository
                         await _context.Requests.AddAsync(request);
                         if (await _context.SaveChangesAsync() > 0)
                         {
-                            responseData.isSuccessful = true;
-                            responseData.Message = $"You have successfully sent a request to {userToRequestEmail}";
+                            Notification notificationForWalletAdmin = new Notification
+                            {
+                                //TODO: поменять message на сообщение от пользователя
+                                InitiatorUser = requester.UserName,
+                                Message = "Please, grant me access to your wallet",
+                                CreationDate = DateTime.Now,
+                                //TODO: поменять reason на правильный id
+                                ReasonId = 3,
+                                WalletId = walletOwner.WalletID,
+                                isForAll = false,
+                            };
+
+                            _context.Notifications.Add(notificationForWalletAdmin);
+                            if (await _context.SaveChangesAsync() > 0)
+                            {
+                                NotificationUser notificationUser = new NotificationUser
+                                {
+                                    NotificationId = notificationForWalletAdmin.Id,
+                                    //TODO: добавлять уведомление не только walletOwner, а админам кошелька
+                                    UserId = walletOwner.Id
+                                };
+                                _context.NotificationsUsers.Add(notificationUser);
+                                if (await _context.SaveChangesAsync() > 0)
+                                {
+                                    responseData.isSuccessful = true;
+                                    responseData.Message = $"You have successfully sent a request to {userToRequestEmail}";
+                                    return responseData;
+                                }
+                            }
+                            responseData.isSuccessful = false;
+                            responseData.Message = $"Notification was not created";
                             return responseData;
                         }
                     }
@@ -323,5 +367,8 @@ namespace Wallets_API.Repository
         }
 
 
+
+        //------------------------------------------------------------------------
+        
     }
 }

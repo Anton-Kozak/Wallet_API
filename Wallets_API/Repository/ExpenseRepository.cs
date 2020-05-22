@@ -66,12 +66,19 @@ namespace Wallets_API.Repository
 
         public async Task<WalletToReturnDTO> GetWalletData(int walletId)
         {
+            var today = DateTime.Today;
+            var currentMonth = new DateTime(today.Year, today.Month, 1);
+            var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
+
             var walletTitle = await _context.Wallets.Where(w => w.Id == walletId).Select(w => w.Title).FirstOrDefaultAsync();
             var walletLimit = await _context.Wallets.Where(w => w.Id == walletId).Select(w => w.MonthlyLimit).FirstOrDefaultAsync();
+            var monthlyExpenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(m=> m.MoneySpent);
+
             return new WalletToReturnDTO
             {
                 Title = walletTitle,
                 MonthlyLimit = walletLimit,
+                MonthlyExpenses = monthlyExpenses
             };
         }
 

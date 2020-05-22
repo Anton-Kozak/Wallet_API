@@ -26,5 +26,9 @@ namespace Wallets_API.Repository
         Task<IEnumerable<RequestToReturnDTO>> GetRequests(string ownerEmail);
         Task<ResponseData> AcceptRequest(string emailToAccept, int walletId);
         Task<ResponseData> DeclineRequest(string userId, string emailToDecline);
+
+
+
+        
     }
 }

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Wallets_API.DBClasses;
 using Wallets_API.Models;
@@ -18,25 +17,18 @@ namespace Wallets_API.Data
         public DbSet<Request> Requests { get; set; }
         public DbSet<Invite> Invites { get; set; }
 
-        //protected override void OnModelCreating(ModelBuilder builder)
-        //{
-        //    base.OnModelCreating(builder);
+        public DbSet<NotificationUser> NotificationsUsers { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationCategory> NotificationCategories { get; set; }
 
-        //    builder.Entity<ApplicationUserRole>(userRole =>
-        //    {
-        //        userRole.HasKey(ur => new { ur.UserId, ur.RoleId });
 
-        //        userRole.HasOne(ur => ur.Role)
-        //            .WithMany(r => r.UserRoles)
-        //            .HasForeignKey(ur => ur.RoleId)
-        //            .IsRequired();
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
 
-        //        userRole.HasOne(ur => ur.User)
-        //            .WithMany(r => r.UserRoles)
-        //            .HasForeignKey(ur => ur.UserId)
-        //            .IsRequired();
-        //    });
-        //}
+            builder.Entity<NotificationUser>()
+                .HasKey(nu => new { nu.NotificationId, nu.UserId });
+        }
 
     }
 }

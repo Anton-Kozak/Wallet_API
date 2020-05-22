@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Wallets_API.DTO
+namespace Wallets_API.DBClasses
 {
-    public class WalletToReturnDTO
+    public class NotificationCategory
     {
+        public int Id { get; set; }
         public string Title { get; set; }
-        public int MonthlyLimit { get; set; }
-        public double MonthlyExpenses { get; set; }
     }
 }

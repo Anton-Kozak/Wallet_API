@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -87,14 +86,9 @@ namespace Wallets_API.Controllers
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {
-                    var otherData = await _expenseRepository.GetWalletData(user.WalletID);
-                    if (otherData != null)
-                    {
-                        WalletToReturnDTO walletData = new WalletToReturnDTO();
-                        walletData.Title = otherData.Title;
-                        walletData.MonthlyLimit = otherData.MonthlyLimit;
+                    var walletData = await _expenseRepository.GetWalletData(user.WalletID);
+                    if (walletData != null)
                         return Ok(walletData);
-                    }
                 }
                 return BadRequest("Could not retreive wallet's data");
             }
@@ -136,10 +130,17 @@ namespace Wallets_API.Controllers
 
                 if (user != null)
                 {
+                    ExpenseWithMessageDTO expenseWithMessage = new ExpenseWithMessageDTO();
+                    var walletData = await _expenseRepository.GetWalletData(user.WalletID);
+                    if (walletData.MonthlyExpenses + newExpense.MoneySpent > walletData.MonthlyLimit)
+                        expenseWithMessage.Message = "You have exceeded your wallet's limit!";
                     newExpense.ExpenseUserId = userId;
                     newExpense.FamilyWalletId = user.WalletID;
                     if (await _expenseRepository.CreateNewExpense(newExpense) != null)
-                        return Ok(newExpense);
+                    {
+                        expenseWithMessage.Expense = newExpense;
+                        return Ok(expenseWithMessage);
+                    }
                     return BadRequest("Something went wrong");
                 }
                 return BadRequest("Could not create an expense");
