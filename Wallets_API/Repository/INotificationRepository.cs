@@ -9,7 +9,7 @@ namespace Wallets_API.Repository
 {
     public interface INotificationRepository
     {
-        Task<Notification> Notification(string userId);
+        Task<Notification> CreateNotification(string userId, string notificationReason, string message, bool isForAll);
         Task<List<Notification>> GetNotifications(ApplicationUser user);
         Task DeleteNotification(ApplicationUser user);
     }

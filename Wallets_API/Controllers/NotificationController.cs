@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using AutoMapper;
-using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Wallets_API.Models;
 using Wallets_API.Repository;
 
@@ -28,18 +24,21 @@ namespace Wallets_API.Controllers
             _mapper = mapper;
             _roleManager = roleManager;
         }
+
         [HttpPost("notification")]
-        public async Task<IActionResult> Notification(string userId)
+        public async Task<IActionResult> Notification(string userId, string notificationReason, string message, bool isForAll)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (currentUser != null && currentUser.WalletID != 0)
                 {
-                    var note = await _repo.Notification(userId);
-                    return Ok(note);
+                    var note = await _repo.CreateNotification(currentUser.Id, notificationReason, message, isForAll);
+                    if (note != null)
+                        return Ok();
+                    return BadRequest("Error creating notification");
                 }
-                return BadRequest("error");
+                return BadRequest();
             }
             return Unauthorized();
         }

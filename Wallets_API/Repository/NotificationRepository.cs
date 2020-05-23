@@ -18,35 +18,53 @@ namespace Wallets_API.Repository
             _context = context;
         }
 
-        public async Task<Notification> Notification(string userId)
+        public async Task<Notification> CreateNotification(string userId, string notificationReason, string message, bool isForAll)
         {
-            var wallet = await _context.Users.Where(u => u.Id == userId).Select(u => u.WalletID).FirstOrDefaultAsync();
-            var users = await _context.Users.Where(u => u.WalletID == wallet).ToListAsync();
-            Notification note = new Notification
-            {
-                InitiatorUser = userId,
-                CreationDate = DateTime.Now,
-                Message = "New member",
-                ReasonId = 2,
-                WalletId = wallet,
-                isForAll = true,
-            };
-            _context.Notifications.Add(note);
-            await _context.SaveChangesAsync();
+            var walletId = await _context.Users.Where(u => u.Id == userId).Select(u => u.WalletID).FirstOrDefaultAsync();
+            var users = await _context.Users.Where(u => u.WalletID == walletId).ToListAsync();
+            var notificationReasonId = await _context.NotificationCategories.Where(n => n.Title == notificationReason).Select(n => n.Id).FirstOrDefaultAsync();
 
-            foreach (var user in users)
+            var exists = await _context.Notifications.Where(n => n.ReasonId == notificationReasonId && n.WalletId == walletId).AnyAsync();
+            if (!exists)
             {
-                NotificationUser notificationUser = new NotificationUser
+                Notification note = new Notification
                 {
-                    NotificationId = note.Id,
-                    UserId = user.Id,
+                    InitiatorUser = userId,
+                    CreationDate = DateTime.Now,
+                    Message = message,
+                    ReasonId = notificationReasonId,
+                    WalletId = walletId,
+                    isForAll = isForAll,
                 };
-                _context.NotificationsUsers.Add(notificationUser);
-
-
+                _context.Notifications.Add(note);
+                await _context.SaveChangesAsync();
+                if (isForAll)
+                {
+                    foreach (var user in users)
+                    {
+                        NotificationUser notificationUser = new NotificationUser
+                        {
+                            NotificationId = note.Id,
+                            UserId = user.Id,
+                        };
+                        _context.NotificationsUsers.Add(notificationUser);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    var walletCreator = users.Where(u => u.IsWalletAdmin).FirstOrDefault();
+                    NotificationUser notificationUser = new NotificationUser
+                    {
+                        NotificationId = note.Id,
+                        UserId = walletCreator.Id,
+                    };
+                    _context.NotificationsUsers.Add(notificationUser);
+                    await _context.SaveChangesAsync();
+                }
+                return note;
             }
-            await _context.SaveChangesAsync();
-            return note;
+            return null;
         }
 
         public async Task<List<Notification>> GetNotifications(ApplicationUser user)

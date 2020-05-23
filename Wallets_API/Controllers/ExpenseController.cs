@@ -21,11 +21,12 @@ namespace Wallets_API.Controllers
 
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IExpenseRepository _expenseRepository;
-
-        public ExpenseController(UserManager<ApplicationUser> userManager, IExpenseRepository expenseRepository)
+        private readonly INotificationRepository _notificationRepository;
+        public ExpenseController(UserManager<ApplicationUser> userManager, IExpenseRepository expenseRepository, INotificationRepository notificationRepository)
         {
             _userManager = userManager;
             _expenseRepository = expenseRepository;
+            _notificationRepository = notificationRepository;
         }
 
 
@@ -132,12 +133,28 @@ namespace Wallets_API.Controllers
                 {
                     ExpenseWithMessageDTO expenseWithMessage = new ExpenseWithMessageDTO();
                     var walletData = await _expenseRepository.GetWalletData(user.WalletID);
-                    if (walletData.MonthlyExpenses + newExpense.MoneySpent > walletData.MonthlyLimit)
-                        expenseWithMessage.Message = "You have exceeded your wallet's limit!";
                     newExpense.ExpenseUserId = userId;
                     newExpense.FamilyWalletId = user.WalletID;
                     if (await _expenseRepository.CreateNewExpense(newExpense) != null)
                     {
+                        var expenseSum = walletData.MonthlyExpenses + newExpense.MoneySpent;
+                        var compareSum = 0.75 * walletData.MonthlyLimit;
+                        if (expenseSum > walletData.MonthlyLimit)
+                        {
+                            expenseWithMessage.Message = "You have exceeded your wallet's limit!";
+                            await _notificationRepository.CreateNotification(user.Id, "Limit", expenseWithMessage.Message, false);
+                        }
+                        else if (expenseSum > (0.9 * walletData.MonthlyLimit))
+                        {
+                            expenseWithMessage.Message = "You have reached 90% of wallet's limit!";
+                            await _notificationRepository.CreateNotification(user.Id, "90", expenseWithMessage.Message, false);
+                        }
+                        else if (expenseSum > compareSum)
+                        {
+                            expenseWithMessage.Message = "You have reached 75% of wallet's limit!!";
+                            await _notificationRepository.CreateNotification(user.Id, "75", expenseWithMessage.Message, false);
+                        }
+
                         expenseWithMessage.Expense = newExpense;
                         return Ok(expenseWithMessage);
                     }
