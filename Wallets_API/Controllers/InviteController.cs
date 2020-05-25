@@ -16,13 +16,15 @@ namespace Wallets_API.Controllers
     [ApiController]
     public class InviteController : ControllerBase
     {
-        private readonly IWalletRepository _repository;
+        private readonly IInviteRepository _repository;
+        private readonly INotificationRepository _noteRepository;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public InviteController(IWalletRepository repository, UserManager<ApplicationUser> userManager)
+        public InviteController(IInviteRepository repository, UserManager<ApplicationUser> userManager, INotificationRepository noteRepository)
         {
             _repository = repository;
             _userManager = userManager;
+            _noteRepository = noteRepository;
         }
 
         [HttpGet("getInvites")]
@@ -47,11 +49,13 @@ namespace Wallets_API.Controllers
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
-                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-                var result = await _repository.InviteToWallet(userId, userToInviteEmail, user.WalletID);
+                var whoInvites = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                var whoIsInvited = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == userToInviteEmail);
+                var result = await _repository.InviteToWallet(userId, userToInviteEmail, whoInvites.WalletID);
 
                 if (result.isSuccessful)
                 {
+                    await _noteRepository.CreateNotification(whoInvites.Id, whoIsInvited.Id, "NewMemberInvite", "Would you like to join my wallet?", false);
                     return Ok(result.Message);
                 }
                 return BadRequest(result.Message);
@@ -64,11 +68,16 @@ namespace Wallets_API.Controllers
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
-                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                
+                var whoIsInvited = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                var whoInvites = await _userManager.Users.FirstOrDefaultAsync(u => u.WalletID == walletId && u.IsWalletAdmin);
+                //TODO: исправить ВЕЗДЕ передачу userId, вместо того чтобы передавать сразу юзера
                 var result = await _repository.AcceptInvite(userId, walletId);
 
                 if (result.isSuccessful)
                 {
+                    await _noteRepository.DeleteNotification(whoIsInvited);
+                    await _noteRepository.CreateNotification(whoIsInvited.Id, whoInvites.Id, "NewMember", $"Member {whoIsInvited.UserName} has joined the wallet!", true); 
                     return Ok(result.Message);
                 }
                 return BadRequest(result.Message);

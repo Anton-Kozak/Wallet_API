@@ -14,21 +14,6 @@ namespace Wallets_API.Repository
     {
         Task<bool> CreateWallet(Wallet wallet, ApplicationUser user);
         Task<Wallet> GetCurrentWallet(int walletId);
-        Task<ResponseData> EditWallet(int walletId, WalletToReturnDTO walletToEdit);
-
-
-        Task<ResponseData> InviteToWallet(string inviterId, string inviteeEmail, int walletId);
-        Task<ResponseData> AcceptInvite(string userId, int walletId);
-        Task<ResponseData> DeclineInvite(string userId, int walletId);
-        Task<IEnumerable<InviteToReturnDTO>> GetInvites(string userId);
-
-        Task<ResponseData> CreateRequestForAccess(string requesterId, string userToRequestEmail);
-        Task<IEnumerable<RequestToReturnDTO>> GetRequests(string ownerEmail);
-        Task<ResponseData> AcceptRequest(string emailToAccept, int walletId);
-        Task<ResponseData> DeclineRequest(string userId, string emailToDecline);
-
-
-
-        
+        Task<ResponseData> EditWallet(int walletId, WalletToReturnDTO walletToEdit);       
     }
 }

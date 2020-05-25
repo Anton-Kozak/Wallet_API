@@ -25,31 +25,13 @@ namespace Wallets_API.Controllers
             _roleManager = roleManager;
         }
 
-        [HttpPost("notification")]
-        public async Task<IActionResult> Notification(string userId, string notificationReason, string message, bool isForAll)
-        {
-            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
-            {
-                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-                if (currentUser != null && currentUser.WalletID != 0)
-                {
-                    var note = await _repo.CreateNotification(currentUser.Id, notificationReason, message, isForAll);
-                    if (note != null)
-                        return Ok();
-                    return BadRequest("Error creating notification");
-                }
-                return BadRequest();
-            }
-            return Unauthorized();
-        }
-
         [HttpGet("getNotifications")]
         public async Task<IActionResult> GetNotifications(string userId)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-                if (currentUser != null && currentUser.WalletID != 0)
+                if (currentUser != null)
                 {
                     var notes = await _repo.GetNotifications(currentUser);
                     return Ok(notes);

@@ -139,20 +139,21 @@ namespace Wallets_API.Controllers
                     {
                         var expenseSum = walletData.MonthlyExpenses + newExpense.MoneySpent;
                         var compareSum = 0.75 * walletData.MonthlyLimit;
+                        var walletAdmin = await _userManager.Users.FirstOrDefaultAsync(u => u.IsWalletAdmin && u.WalletID == user.WalletID);
                         if (expenseSum > walletData.MonthlyLimit)
                         {
                             expenseWithMessage.Message = "You have exceeded your wallet's limit!";
-                            await _notificationRepository.CreateNotification(user.Id, "Limit", expenseWithMessage.Message, false);
+                            await _notificationRepository.CreateNotification(user.Id, walletAdmin.Id, "Limit", expenseWithMessage.Message, false);
                         }
                         else if (expenseSum > (0.9 * walletData.MonthlyLimit))
                         {
                             expenseWithMessage.Message = "You have reached 90% of wallet's limit!";
-                            await _notificationRepository.CreateNotification(user.Id, "90", expenseWithMessage.Message, false);
+                            await _notificationRepository.CreateNotification(user.Id, walletAdmin.Id, "90", expenseWithMessage.Message, false);
                         }
                         else if (expenseSum > compareSum)
                         {
                             expenseWithMessage.Message = "You have reached 75% of wallet's limit!!";
-                            await _notificationRepository.CreateNotification(user.Id, "75", expenseWithMessage.Message, false);
+                            await _notificationRepository.CreateNotification(user.Id, walletAdmin.Id, "75", expenseWithMessage.Message, false);
                         }
 
                         expenseWithMessage.Expense = newExpense;

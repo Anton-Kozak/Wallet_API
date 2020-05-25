@@ -14,6 +14,7 @@ namespace Wallets_API.DBClasses
         public string Message { get; set; }
         public int WalletId { get; set; }
         public string InitiatorUser { get; set; }
+        public string TargetUser { get; set; }
         public bool isForAll { get; set; }
         public DateTime CreationDate { get; set; }
     }
