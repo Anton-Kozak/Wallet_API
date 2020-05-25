@@ -76,6 +76,7 @@ namespace Wallets_API.Repository
             return notificationsForUser;
         }
 
+        //TODO: подумать как объединить все удаления уведомлений в один метод
         public async Task DeleteNotification(ApplicationUser user)
         {
             var notificationsToDelete = await _context.NotificationsUsers.Where(n => n.UserId == user.Id).ToListAsync();
@@ -94,8 +95,27 @@ namespace Wallets_API.Repository
                         await _context.SaveChangesAsync();
                     }
                 }
-
             }
+        }
+
+        public async Task DeleteRequestAndInviteNotifications(ApplicationUser user)
+        {
+            var inviteNotifications = await _context.Notifications.Where(n => n.TargetUser == user.Id && n.ReasonId == 6).ToListAsync();
+            _context.Notifications.RemoveRange(inviteNotifications);
+            foreach (var note in inviteNotifications)
+            {
+                var notification = await _context.NotificationsUsers.Where(n => n.NotificationId == note.Id).FirstOrDefaultAsync();
+                _context.NotificationsUsers.Remove(notification);
+            }
+            await _context.SaveChangesAsync();
+            var requestNotifications = await _context.Notifications.Where(n => n.InitiatorUser == user.Id && n.ReasonId == 5).ToListAsync();
+            _context.Notifications.RemoveRange(requestNotifications);
+            foreach (var note in requestNotifications)
+            {
+                var notification = await _context.NotificationsUsers.Where(n => n.NotificationId == note.Id).FirstOrDefaultAsync();
+                _context.NotificationsUsers.Remove(notification);
+            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteSpecificNotification(ApplicationUser user, string notificationReason, string targetId)

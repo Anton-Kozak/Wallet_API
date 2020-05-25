@@ -76,7 +76,7 @@ namespace Wallets_API.Controllers
 
                 if (result.isSuccessful)
                 {
-                    await _noteRepository.DeleteNotification(whoIsInvited);
+                    await _noteRepository.DeleteRequestAndInviteNotifications(whoIsInvited);
                     await _noteRepository.CreateNotification(whoIsInvited.Id, whoInvites.Id, "NewMember", $"Member {whoIsInvited.UserName} has joined the wallet!", true); 
                     return Ok(result.Message);
                 }

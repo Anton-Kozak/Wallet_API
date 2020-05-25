@@ -13,5 +13,6 @@ namespace Wallets_API.Repository
         Task<List<Notification>> GetNotifications(ApplicationUser user);
         Task DeleteNotification(ApplicationUser user);
         Task DeleteSpecificNotification(ApplicationUser user, string notificationReason, string targetId);
+        Task DeleteRequestAndInviteNotifications(ApplicationUser user);
     }
 }

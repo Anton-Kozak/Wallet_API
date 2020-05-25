@@ -71,7 +71,7 @@ namespace Wallets_API.Controllers
                     var result = await _repository.AcceptRequest(emailToAccept, user.WalletID);
                     if (result.isSuccessful)
                     {
-                        await _noteRepository.DeleteSpecificNotification(userToAccept, "NewMemberRequest", user.Id);
+                        await _noteRepository.DeleteRequestAndInviteNotifications(userToAccept);
                         await _noteRepository.CreateNotification(user.Id, userToAccept.Id, "NewMember", $"Member {userToAccept.UserName} has joined the wallet!", true);
                         return Ok(result.Message);
                     }

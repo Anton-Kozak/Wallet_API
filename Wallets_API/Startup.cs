@@ -52,7 +52,8 @@ namespace Wallets_API
             services.AddScoped<IExpenseRepository, ExpenseRepository>();
             services.AddScoped<IAdminRepository, AdminRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
-
+            services.AddScoped<IRequestRepository, RequestRepository>();
+            services.AddScoped<IInviteRepository, InviteRepository>();
             // 
 
             //identity
