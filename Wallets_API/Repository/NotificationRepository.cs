@@ -108,6 +108,8 @@ namespace Wallets_API.Repository
                 _context.NotificationsUsers.Remove(notification);
             }
             await _context.SaveChangesAsync();
+
+
             var requestNotifications = await _context.Notifications.Where(n => n.InitiatorUser == user.Id && n.ReasonId == 5).ToListAsync();
             _context.Notifications.RemoveRange(requestNotifications);
             foreach (var note in requestNotifications)

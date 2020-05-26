@@ -11,7 +11,7 @@ using Wallets_API.Models.CustomModels;
 
 namespace Wallets_API.Repository
 {
-    class InviteRepository: IInviteRepository
+    class InviteRepository : IInviteRepository
     {
         private readonly ApplicationDbContext _context;
 
@@ -123,22 +123,16 @@ namespace Wallets_API.Repository
 
             if (user.WalletID == 0)
             {
-                var inviteToDecline = await _context.Invites.Where(i => i.WalletId == walletId && i.InviteReceiverEmail == user.Email).ToListAsync();
-                if (inviteToDecline.Count() == 1)
-                {
-                    _context.Invites.Remove(inviteToDecline.First());
-                    await _context.SaveChangesAsync();
-                    responseData.isSuccessful = true;
-                    responseData.Message = $"You have declined invite to {inviteToDecline.First().WalletTitle}";
-                    return responseData;
-                }
-                else
-                {
-                    _context.Invites.RemoveRange(inviteToDecline);
-                    await _context.SaveChangesAsync();
-                    responseData.Message = "There was several invites to this email. All of them were deleted";
-                    return responseData;
-                }
+                var inviteToDecline = await _context.Invites.Where(i => i.WalletId == walletId && i.InviteReceiverEmail == user.Email).FirstOrDefaultAsync();
+                var notificationToDelete = await _context.Notifications.Where(n => n.ReasonId == 6 && n.InitiatorUser == inviteToDecline.InviteCreatorId && n.TargetUser == user.Id).FirstOrDefaultAsync();
+                _context.Notifications.Remove(notificationToDelete);
+                var notificationUserToDelete = await _context.NotificationsUsers.Where(n => n.NotificationId == notificationToDelete.Id).FirstOrDefaultAsync();
+                _context.NotificationsUsers.Remove(notificationUserToDelete);
+                _context.Invites.Remove(inviteToDecline);
+                await _context.SaveChangesAsync();
+                responseData.isSuccessful = true;
+                responseData.Message = $"You have declined invite to {inviteToDecline.WalletTitle}";
+                return responseData;
             }
             return responseData;
         }
@@ -147,7 +141,6 @@ namespace Wallets_API.Repository
         {
             var invites = await _context.Invites.Where(i => i.InviteReceiverEmail == user.Email).ToListAsync();
             _context.Invites.RemoveRange(invites);
-            await _context.SaveChangesAsync();
 
             var requests = await _context.Requests.Where(i => i.RequestCreatorId == user.Id).ToListAsync();
             _context.Requests.RemoveRange(requests);

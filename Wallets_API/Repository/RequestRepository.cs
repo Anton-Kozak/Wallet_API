@@ -115,7 +115,6 @@ namespace Wallets_API.Repository
         {
             var invites = await _context.Invites.Where(i => i.InviteReceiverEmail == user.Email).ToListAsync();
             _context.Invites.RemoveRange(invites);
-            await _context.SaveChangesAsync();
 
             var requests = await _context.Requests.Where(i => i.RequestCreatorId == user.Id).ToListAsync();
             _context.Requests.RemoveRange(requests);
@@ -139,6 +138,10 @@ namespace Wallets_API.Repository
                 var request = await _context.Requests.Where(r => r.RequestCreatorId == userToDecline.Id && r.RequestReceiverEmail == walletOwner.Email).FirstOrDefaultAsync();
                 if (request != null)
                 {
+                    var notificationToDelete = await _context.Notifications.Where(n => n.InitiatorUser == userToDecline.Id && n.TargetUser == walletOwner.Id).FirstOrDefaultAsync();
+                    _context.Notifications.Remove(notificationToDelete);
+                    var notificationUserToDelete = await _context.NotificationsUsers.Where(n => n.NotificationId == notificationToDelete.Id).FirstOrDefaultAsync();
+                    _context.NotificationsUsers.Remove(notificationUserToDelete);
                     _context.Requests.Remove(request);
                     await _context.SaveChangesAsync();
                     responseData.isSuccessful = true;
