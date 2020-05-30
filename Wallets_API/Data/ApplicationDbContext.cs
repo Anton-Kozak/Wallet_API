@@ -17,6 +17,8 @@ namespace Wallets_API.Data
         public DbSet<Request> Requests { get; set; }
         public DbSet<Invite> Invites { get; set; }
 
+        public DbSet<Photo> Photos { get; set; }
+
         public DbSet<NotificationUser> NotificationsUsers { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationCategory> NotificationCategories { get; set; }

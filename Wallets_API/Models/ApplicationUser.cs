@@ -11,6 +11,6 @@ namespace Wallets_API.Models
         public int WalletID { get; set; }
         public bool IsWalletAdmin { get; set; }
         public DateTime DateJoined { get; set; }
-        //public ICollection<ApplicationUserRole> UserRoles { get; set; }
+        public int UserPhotoId { get; set; }
     }
 }

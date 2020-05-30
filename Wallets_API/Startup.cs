@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Wallets_API.Authorization;
 using Wallets_API.Data;
+using Wallets_API.Helpers;
 using Wallets_API.Models;
 using Wallets_API.Repository;
 
@@ -123,6 +124,7 @@ namespace Wallets_API
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddCors();
+            services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             services.AddAutoMapper();
         }
 
