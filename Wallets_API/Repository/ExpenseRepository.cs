@@ -50,17 +50,31 @@ namespace Wallets_API.Repository
             return null;
         }
 
-        public async Task<List<Expense>> ShowAllExpenses(int walletId)
+        public async Task<List<Expense>> ShowCurrentExpenses(int walletId)
         {
+            var today = DateTime.Today;
+            var currentMonth = new DateTime(today.Year, today.Month, 1);
+            var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
             List<Expense> listOfExpensesToReturn = new List<Expense>();
 
             foreach (var category in _context.ExpenseCategories)
             {
-                listOfExpensesToReturn.AddRange(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == category.Id).Take(10).ToListAsync());
+                listOfExpensesToReturn.AddRange(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == category.Id && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).Take(10).ToListAsync());
             }
+            return listOfExpensesToReturn;
+        }
 
+        public async Task<List<Expense>> ShowPreviousExpenses(int walletId)
+        {
+            var today = DateTime.Today;
+            var currentMonth = new DateTime(today.Year, today.Month, 1);
+            var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
+            List<Expense> listOfExpensesToReturn = new List<Expense>();
 
-
+            foreach (var category in _context.ExpenseCategories)
+            {
+                listOfExpensesToReturn.AddRange(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == category.Id && e.CreationDate < currentMonth).Take(10).ToListAsync());
+            }
             return listOfExpensesToReturn;
         }
 
@@ -72,7 +86,7 @@ namespace Wallets_API.Repository
 
             var walletTitle = await _context.Wallets.Where(w => w.Id == walletId).Select(w => w.Title).FirstOrDefaultAsync();
             var walletLimit = await _context.Wallets.Where(w => w.Id == walletId).Select(w => w.MonthlyLimit).FirstOrDefaultAsync();
-            var monthlyExpenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(m=> m.MoneySpent);
+            var monthlyExpenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(m => m.MoneySpent);
 
             return new WalletToReturnDTO
             {
