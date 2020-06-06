@@ -89,18 +89,42 @@ namespace Wallets_API.Repository
             return await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(m => m.MoneySpent);
         }
 
-        //--------------------------------------INVITE---------------------------------------------
+        public async Task<bool> AddCategoriesToWallet(int walletId)
+        {
+            WalletsCategories walletsCategories = new WalletsCategories
+            {
+                WalletId = walletId,
+                CategoryId = 1
+            };
+            WalletsCategories walletsCategories2 = new WalletsCategories
+            {
+                WalletId = walletId,
+                CategoryId = 6
+            };
+            WalletsCategories walletsCategories3 = new WalletsCategories
+            {
+                WalletId = walletId,
+                CategoryId = 7
+            };
+            _context.WalletsCategories.Add(walletsCategories);
+            _context.WalletsCategories.Add(walletsCategories2);
+            _context.WalletsCategories.Add(walletsCategories3);
+            await _context.SaveChangesAsync();
+            return true;
+        }
 
-       
-
-
-        //--------------------------------------REQUEST---------------------------------------------
-
-        
-
-
-
-        //------------------------------------------------------------------------
-
+        public async Task<List<WalletCategoriesToReturnDTO>> GetCategories(int walletId)
+        {
+            var cat = await (from wc in _context.WalletsCategories
+                             join c in _context.ExpenseCategories
+                             on wc.CategoryId equals c.Id
+                             where wc.WalletId == walletId
+                             select new WalletCategoriesToReturnDTO
+                             {
+                                 CategoryId = wc.CategoryId,
+                                 CategoryName = c.Title
+                             }).ToListAsync();
+            return cat;
+        }
     }
 }

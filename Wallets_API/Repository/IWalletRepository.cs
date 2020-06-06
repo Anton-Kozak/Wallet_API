@@ -14,6 +14,9 @@ namespace Wallets_API.Repository
     {
         Task<bool> CreateWallet(Wallet wallet, ApplicationUser user);
         Task<Wallet> GetCurrentWallet(int walletId);
-        Task<ResponseData> EditWallet(int walletId, WalletToReturnDTO walletToEdit);       
+        Task<ResponseData> EditWallet(int walletId, WalletToReturnDTO walletToEdit);
+        //walletId + list of category IDs
+        Task<bool> AddCategoriesToWallet(int walletId);
+        Task<List<WalletCategoriesToReturnDTO>> GetCategories(int walletId);
     }
 }

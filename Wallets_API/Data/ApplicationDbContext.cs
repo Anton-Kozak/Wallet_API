@@ -22,6 +22,7 @@ namespace Wallets_API.Data
         public DbSet<NotificationUser> NotificationsUsers { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationCategory> NotificationCategories { get; set; }
+        public DbSet<WalletsCategories> WalletsCategories { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -30,6 +31,9 @@ namespace Wallets_API.Data
 
             builder.Entity<NotificationUser>()
                 .HasKey(nu => new { nu.NotificationId, nu.UserId });
+
+            builder.Entity<WalletsCategories>()
+                .HasKey(wc => new { wc.WalletId, wc.CategoryId });
         }
 
     }

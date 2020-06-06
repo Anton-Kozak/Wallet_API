@@ -53,6 +53,42 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
+        [HttpPost("addCategories")]
+        public async Task<IActionResult> AddCategoriesToWallet(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (currentUser != null)
+                {
+                    if (currentUser.IsWalletAdmin && currentUser.WalletID != 0)
+                    {
+                        var res = await _repo.AddCategoriesToWallet(currentUser.WalletID);
+                        return Ok(res);
+                    }
+                }
+                return BadRequest("No user has been found");
+            }
+            return Unauthorized();
+        }
+
+        [HttpGet("getWalletCategories")]
+        public async Task<IActionResult> GetWalletCategories(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (currentUser != null)
+                {
+                    var res = await _repo.GetCategories(currentUser.WalletID);
+                    return Ok(res);
+                }
+                return BadRequest("No user has been found");
+            }
+            return Unauthorized();
+        }
+
+
         [HttpGet("getCurrentWallet")]
         public async Task<IActionResult> GetCurrentWallet(string userId)
         {
@@ -90,6 +126,6 @@ namespace Wallets_API.Controllers
                 }
             }
             return Unauthorized();
-        }       
+        }
     }
 }
