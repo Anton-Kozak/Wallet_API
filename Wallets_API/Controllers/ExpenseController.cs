@@ -37,9 +37,9 @@ namespace Wallets_API.Controllers
         private string GetCategoryName(int categoryId)
         {
             var cat = (from wc in _context.WalletsCategories
-                             join c in _context.ExpenseCategories
-                             on wc.CategoryId equals c.Id
-                             select c.Title).FirstOrDefault();
+                       join c in _context.ExpenseCategories
+                       on wc.CategoryId equals c.Id
+                       select c.Title).FirstOrDefault();
             return cat;
         }
 
@@ -54,7 +54,7 @@ namespace Wallets_API.Controllers
                     var expenses = await _expenseRepository.ShowCurrentExpenses(user.WalletID);
                     if (expenses != null)
                     {
-                        var groupedDemoClasses = expenses
+                        var dict = expenses
                              .GroupBy(x => x.ExpenseCategoryId)
                              .ToDictionary(gdc => gdc.Key, gdc => gdc.ToList());
 
@@ -87,7 +87,7 @@ namespace Wallets_API.Controllers
                         //            break;
                         //    }
                         //}
-                        return Ok(groupedDemoClasses);
+                        return Ok(dict);
                     }
                 }
                 return BadRequest(null);

@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Wallets_API.DBClasses;
 using Wallets_API.DTO;
@@ -16,7 +13,7 @@ namespace Wallets_API.Repository
         Task<Wallet> GetCurrentWallet(int walletId);
         Task<ResponseData> EditWallet(int walletId, WalletToReturnDTO walletToEdit);
         //walletId + list of category IDs
-        Task<bool> AddCategoriesToWallet(int walletId);
+        Task<bool> AddCategoriesToWallet(int walletId, int[] catgories);
         Task<List<WalletCategoriesToReturnDTO>> GetCategories(int walletId);
     }
 }

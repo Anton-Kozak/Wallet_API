@@ -89,26 +89,20 @@ namespace Wallets_API.Repository
             return await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(m => m.MoneySpent);
         }
 
-        public async Task<bool> AddCategoriesToWallet(int walletId)
+        public async Task<bool> AddCategoriesToWallet(int walletId, int[] categories)
         {
-            WalletsCategories walletsCategories = new WalletsCategories
+            foreach (var categoryId in categories)
             {
-                WalletId = walletId,
-                CategoryId = 1
-            };
-            WalletsCategories walletsCategories2 = new WalletsCategories
-            {
-                WalletId = walletId,
-                CategoryId = 6
-            };
-            WalletsCategories walletsCategories3 = new WalletsCategories
-            {
-                WalletId = walletId,
-                CategoryId = 7
-            };
-            _context.WalletsCategories.Add(walletsCategories);
-            _context.WalletsCategories.Add(walletsCategories2);
-            _context.WalletsCategories.Add(walletsCategories3);
+                if (!await _context.WalletsCategories.Where(wc => wc.CategoryId == categoryId && wc.WalletId == walletId).AnyAsync() && await _context.ExpenseCategories.Where(ec=> ec.Id == categoryId).AnyAsync())
+                {
+                    WalletsCategories newCategory = new WalletsCategories
+                    {
+                        WalletId = walletId,
+                        CategoryId = categoryId
+                    };
+                    _context.WalletsCategories.Add(newCategory);
+                }
+            }
             await _context.SaveChangesAsync();
             return true;
         }

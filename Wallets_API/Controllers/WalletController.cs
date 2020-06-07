@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Wallets_API.DBClasses;
@@ -54,7 +55,7 @@ namespace Wallets_API.Controllers
         }
 
         [HttpPost("addCategories")]
-        public async Task<IActionResult> AddCategoriesToWallet(string userId)
+        public async Task<IActionResult> AddCategoriesToWallet(string userId, [FromBody]int[] categories)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
@@ -63,8 +64,12 @@ namespace Wallets_API.Controllers
                 {
                     if (currentUser.IsWalletAdmin && currentUser.WalletID != 0)
                     {
-                        var res = await _repo.AddCategoriesToWallet(currentUser.WalletID);
-                        return Ok(res);
+                        if (categories.Length > 0)
+                        {
+                            var res = await _repo.AddCategoriesToWallet(currentUser.WalletID, categories);
+                            return Ok(res);
+                        }
+                        return BadRequest("You have not chosen any categories!");
                     }
                 }
                 return BadRequest("No user has been found");
