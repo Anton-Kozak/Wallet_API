@@ -115,8 +115,8 @@ namespace Wallets_API.Repository
                              where wc.WalletId == walletId
                              select new WalletCategoriesToReturnDTO
                              {
-                                 CategoryId = wc.CategoryId,
-                                 CategoryName = c.Title
+                                 Id = wc.CategoryId,
+                                 Title = c.Title
                              }).ToListAsync();
             return cat;
         }

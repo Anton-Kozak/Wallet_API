@@ -52,20 +52,27 @@ namespace Wallets_API.Repository
             return null;
         }
 
-        public async Task<List<Expense>> ShowCurrentExpenses(int walletId)
+        public async Task<List<ExpensesWithCategoryData>> ShowCurrentExpenses(int walletId)
         {
             var today = DateTime.Today;
             var currentMonth = new DateTime(today.Year, today.Month, 1);
             var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
-            List<Expense> listOfExpensesToReturn = new List<Expense>();
+            List<ExpensesWithCategoryData> expenses = new List<ExpensesWithCategoryData>();
 
             var categories = await _walletRepo.GetCategories(walletId);
-
             foreach (var category in categories)
             {
-                listOfExpensesToReturn.AddRange(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == category.CategoryId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).Take(10).ToListAsync());
+                ExpensesWithCategoryData expGroup = new ExpensesWithCategoryData();
+                expGroup.CategoryId = category.Id;
+                expGroup.CategoryName = category.Title;
+                var catExpenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == category.Id && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).Take(10).ToListAsync();
+                if (catExpenses.Count == 0)
+                    expGroup.Expenses = new List<Expense>();
+                else
+                    expGroup.Expenses = catExpenses;
+                expenses.Add(expGroup);
             }
-            return listOfExpensesToReturn;
+            return expenses;
         }
 
         public async Task<List<Expense>> ShowPreviousExpenses(int walletId)
@@ -93,8 +100,8 @@ namespace Wallets_API.Repository
             var monthlyExpenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(m => m.MoneySpent);
 
             var categoryIDs = await _context.WalletsCategories.Where(wc => wc.WalletId == walletId).Select(wc => wc.CategoryId).ToListAsync();
-                             
-            
+
+
             return new WalletToReturnDTO
             {
                 Title = walletTitle,
@@ -370,7 +377,11 @@ namespace Wallets_API.Repository
             DetailedCategoryStatisticsDTO data = new DetailedCategoryStatisticsDTO();
             //TODO: подумать о том, чтобы объеденить методы для пользователя и категории в одни и те же, просто сделать if для запроса с катгорией и без для запроса к пользователю
             //убрать дубляж кода
-            data.LargestExpense = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == categoryId).MaxAsync(e => e.MoneySpent);
+            var expenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == categoryId).ToListAsync();
+            if (expenses.Count != 0)
+                data.LargestExpense = await expenses.AsQueryable().MaxAsync(e => e.MoneySpent);
+            else
+                data.LargestExpense = 0;
             data.CurrentMonthLargestExpense = await GetCurrentMonthLargestExpense(walletId, categoryId);
             data.MostSpentUser = await GetMostSpentUser(walletId, categoryId);
             data.MostUsedUser = await GetMostUsedUser(walletId, categoryId);
@@ -434,11 +445,15 @@ namespace Wallets_API.Repository
             var currentMonth = new DateTime(today.Year, today.Month, 1);
             var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
 
-            return await _context.Expenses.Where(e => e.FamilyWalletId == walletId
+            var expenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId
                                                         && e.ExpenseCategoryId == categoryId
                                                         && e.CreationDate >= currentMonth
                                                         && e.CreationDate <= endOfCurrentMonth)
-                                                        .MaxAsync(e => e.MoneySpent);
+                                                        .ToListAsync();
+            if (expenses.Count != 0)
+                return await expenses.AsQueryable().MaxAsync(e => e.MoneySpent);
+            else
+                return 0;
         }
 
         private async Task<double> GetCurrentMonthExpenses(int walletId, int categoryId, string userId)

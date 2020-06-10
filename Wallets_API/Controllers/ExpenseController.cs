@@ -54,40 +54,7 @@ namespace Wallets_API.Controllers
                     var expenses = await _expenseRepository.ShowCurrentExpenses(user.WalletID);
                     if (expenses != null)
                     {
-                        var dict = expenses
-                             .GroupBy(x => x.ExpenseCategoryId)
-                             .ToDictionary(gdc => gdc.Key, gdc => gdc.ToList());
-
-                        //ListOfExpensesLists list = new ListOfExpensesLists()
-                        //{
-                        //    food = new List<Expense>(),
-                        //    entertainment = new List<Expense>(),
-                        //    housekeeping = new List<Expense>(),
-                        //    clothes = new List<Expense>(),
-                        //    other = new List<Expense>(),
-                        //};
-                        //foreach (var expense in expenses)
-                        //{
-                        //    switch (expense.ExpenseCategoryId)
-                        //    {
-                        //        case 1:
-                        //            list.food.Add(expense);
-                        //            break;
-                        //        case 2:
-                        //            list.housekeeping.Add(expense);
-                        //            break;
-                        //        case 3:
-                        //            list.clothes.Add(expense);
-                        //            break;
-                        //        case 4:
-                        //            list.entertainment.Add(expense);
-                        //            break;
-                        //        case 5:
-                        //            list.other.Add(expense);
-                        //            break;
-                        //    }
-                        //}
-                        return Ok(dict);
+                        return Ok(expenses);
                     }
                 }
                 return BadRequest(null);
@@ -320,7 +287,7 @@ namespace Wallets_API.Controllers
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
-                if (categoryId <= 0 || categoryId > 5)
+                if (categoryId <= 0)
                     return BadRequest("Category is not found");
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID != 0)
