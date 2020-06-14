@@ -8,7 +8,7 @@ namespace Wallets_API.Models.CustomModels
 {
     public class BarComparison
     {
-        public BarExpensesDTO CurrentMonthData { get; set; }
-        public BarExpensesDTO LastMonthData { get; set; }
+        public List<CategoriesAndExpensesDTO> CurrentMonthData { get; set; }
+        public List<CategoriesAndExpensesDTO> LastMonthData { get; set; }
     }
 }

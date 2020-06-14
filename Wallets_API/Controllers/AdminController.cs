@@ -63,6 +63,25 @@ namespace Wallets_API.Controllers
             }
             return Unauthorized();
         }
+
+
+        [HttpGet("getExpensesData")]
+        public async Task<IActionResult> GetExpensesData(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null && user.IsWalletAdmin)
+                {
+                    var expensesForAdmin = await _repo.GetAllExpenses(user.WalletID);
+                        return Ok(expensesForAdmin);
+                }
+                return BadRequest("User has not been found");
+            }
+            return Unauthorized();
+        }
+
+
     }
 
 

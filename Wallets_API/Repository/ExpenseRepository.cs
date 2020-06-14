@@ -25,23 +25,17 @@ namespace Wallets_API.Repository
             _walletRepo = walletRepo;
         }
 
-        public async Task<BarExpensesDTO> CreateBarExpensesData(int walletId)
+        public async Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesData(int walletId)
         {
             //TODO: проверить что будет если везде будет 0
-            var foodData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 1 && e.FamilyWalletId == walletId).SumAsync(e => e.MoneySpent);
-            var houseData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 2 && e.FamilyWalletId == walletId).SumAsync(e => e.MoneySpent);
-            var clothesData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 3 && e.FamilyWalletId == walletId).SumAsync(e => e.MoneySpent);
-            var enterData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 4 && e.FamilyWalletId == walletId).SumAsync(e => e.MoneySpent);
-            var otherData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 5 && e.FamilyWalletId == walletId).SumAsync(e => e.MoneySpent);
-            BarExpensesDTO barExpenses = new BarExpensesDTO
+            List<CategoriesAndExpensesDTO> expenses = new List<CategoriesAndExpensesDTO>();
+            foreach (var category in _context.WalletsCategories.Where(w => w.WalletId == walletId).AsEnumerable())
             {
-                HouseExpenses = houseData,
-                FoodExpenses = foodData,
-                EntertainmentExpenses = enterData,
-                ClothesExpenses = clothesData,
-                OtherExpenses = otherData
-            };
-            return barExpenses;
+                CategoriesAndExpensesDTO categoriesAndExpenses = new CategoriesAndExpensesDTO();
+                categoriesAndExpenses.CategoryExpenses = _context.Expenses.Where(e => e.ExpenseCategoryId == category.CategoryId && e.FamilyWalletId == walletId).Sum(e => e.MoneySpent);
+                expenses.Add(categoriesAndExpenses);
+            }
+            return expenses;
         }
 
         public async Task<Expense> CreateNewExpense(Expense newExpense)
@@ -189,48 +183,9 @@ namespace Wallets_API.Repository
             double largestExpense;
             GetWalletTopCategories(walletId, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
 
-            switch (categoryIdForSum)
-            {
-                case 1:
-                    data.MostSpentCategory = "Food";
-                    break;
-                case 2:
-                    data.MostSpentCategory = "Housekeeping";
-                    break;
-                case 3:
-                    data.MostSpentCategory = "Clothes";
-                    break;
-                case 4:
-                    data.MostSpentCategory = "Entertainment";
-                    break;
-                case 5:
-                    data.MostSpentCategory = "Other";
-                    break;
-                default:
-                    data.MostSpentCategory = "Nothing";
-                    break;
-            }
-            switch (categoryIdForUsage)
-            {
-                case 1:
-                    data.MostUsedCategory = "Food";
-                    break;
-                case 2:
-                    data.MostUsedCategory = "Housekeeping";
-                    break;
-                case 3:
-                    data.MostUsedCategory = "Clothes";
-                    break;
-                case 4:
-                    data.MostUsedCategory = "Entertainment";
-                    break;
-                case 5:
-                    data.MostUsedCategory = "Other";
-                    break;
-                default:
-                    data.MostUsedCategory = "Nothing";
-                    break;
-            }
+            data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
+            data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
+
             //средние показатели расходов
             data.AverageDailyExpense = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId).AverageAsync(e => e.MoneySpent), 2);
 
@@ -293,12 +248,6 @@ namespace Wallets_API.Repository
                                             Sum = g.Sum(s => s.MoneySpent),
                                             UserName = g.Key
                                         }).OrderByDescending(e => e.Sum).Take(5).ToListAsync();
-
-            //var topFiveMembers = await _context.Expenses.Where(e => e.FamilyWalletId == walletId).GroupBy(e => e.ExpenseUserId).Select(res => new UserStatistics
-            //{
-            //    Sum = res.Sum(s => s.MoneySpent),
-            //    UserName = res.First()
-            //}).OrderByDescending(e => e.Sum).Take(5).ToListAsync();
             return topFiveMembers;
         }
 
@@ -315,40 +264,30 @@ namespace Wallets_API.Repository
             var lastMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= startOfPreviousMonth && e.CreationDate <= endOfPreviousMonth).ToListAsync();
             var currentMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).ToListAsync();
 
-            var lastFoodData = lastMonthData.Where(d => d.ExpenseCategoryId == 1).Sum(e => e.MoneySpent);
-            var lastHouseData = lastMonthData.Where(d => d.ExpenseCategoryId == 2).Sum(e => e.MoneySpent);
-            var lastClothesData = lastMonthData.Where(d => d.ExpenseCategoryId == 3).Sum(e => e.MoneySpent);
-            var lastEntData = lastMonthData.Where(d => d.ExpenseCategoryId == 4).Sum(e => e.MoneySpent);
-            var lastOtherData = lastMonthData.Where(d => d.ExpenseCategoryId == 5).Sum(e => e.MoneySpent);
-
-            BarExpensesDTO lastBarExpenses = new BarExpensesDTO
+            List<CategoriesAndExpensesDTO> currentMonthExpenses = new List<CategoriesAndExpensesDTO>();
+            List<CategoriesAndExpensesDTO> lastMonthExpenses = new List<CategoriesAndExpensesDTO>();
+            foreach (var category in _context.WalletsCategories.Where(w => w.WalletId == walletId).AsEnumerable())
             {
-                HouseExpenses = lastHouseData,
-                FoodExpenses = lastFoodData,
-                EntertainmentExpenses = lastEntData,
-                ClothesExpenses = lastClothesData,
-                OtherExpenses = lastOtherData
-            };
+                CategoriesAndExpensesDTO currentMonthcategoriesAndExpenses = new CategoriesAndExpensesDTO();
+                //sum of current month expenses for this wallet and this category
+                var currentMonthCategoryExpense = _context.Expenses.Where(e => e.ExpenseCategoryId == category.CategoryId && e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).Sum(e => e.MoneySpent);
+                currentMonthcategoriesAndExpenses.Id = category.CategoryId;
+                currentMonthcategoriesAndExpenses.CategoryExpenses = currentMonthCategoryExpense;
 
-            var currentFoodData = currentMonthData.Where(d => d.ExpenseCategoryId == 1).Sum(e => e.MoneySpent);
-            var currentHouseData = currentMonthData.Where(d => d.ExpenseCategoryId == 2).Sum(e => e.MoneySpent);
-            var currentClothesData = currentMonthData.Where(d => d.ExpenseCategoryId == 3).Sum(e => e.MoneySpent);
-            var currentEntData = currentMonthData.Where(d => d.ExpenseCategoryId == 4).Sum(e => e.MoneySpent);
-            var currentOtherData = currentMonthData.Where(d => d.ExpenseCategoryId == 5).Sum(e => e.MoneySpent);
+                CategoriesAndExpensesDTO lastMonthcategoriesAndExpenses = new CategoriesAndExpensesDTO();
+                //sum of last month expenses for this wallet and this category
+                var lastMonthCategoryExpenses = _context.Expenses.Where(e => e.ExpenseCategoryId == category.CategoryId && e.FamilyWalletId == walletId && e.CreationDate >= startOfPreviousMonth && e.CreationDate <= endOfPreviousMonth).Sum(e => e.MoneySpent);
+                lastMonthcategoriesAndExpenses.Id = category.CategoryId;
+                lastMonthcategoriesAndExpenses.CategoryExpenses = lastMonthCategoryExpenses;
 
-            BarExpensesDTO currentbarExpenses = new BarExpensesDTO
-            {
-                HouseExpenses = currentHouseData,
-                FoodExpenses = currentFoodData,
-                EntertainmentExpenses = currentEntData,
-                ClothesExpenses = currentClothesData,
-                OtherExpenses = currentOtherData
-            };
+                currentMonthExpenses.Add(currentMonthcategoriesAndExpenses);
+                lastMonthExpenses.Add(lastMonthcategoriesAndExpenses);
+            }
 
             BarComparison barComparison = new BarComparison
             {
-                CurrentMonthData = currentbarExpenses,
-                LastMonthData = lastBarExpenses
+                CurrentMonthData = currentMonthExpenses,
+                LastMonthData = lastMonthExpenses
             };
 
             return barComparison;
@@ -377,11 +316,12 @@ namespace Wallets_API.Repository
             DetailedCategoryStatisticsDTO data = new DetailedCategoryStatisticsDTO();
             //TODO: подумать о том, чтобы объеденить методы для пользователя и категории в одни и те же, просто сделать if для запроса с катгорией и без для запроса к пользователю
             //убрать дубляж кода
-            var expenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == categoryId).ToListAsync();
+            var expenses = await ShowCategoryExpenses(walletId, categoryId);
             if (expenses.Count != 0)
-                data.LargestExpense = await expenses.AsQueryable().MaxAsync(e => e.MoneySpent);
+                data.LargestExpense = expenses.AsQueryable().Max(e => e.MoneySpent);
             else
                 data.LargestExpense = 0;
+            data.CategoryExpenses = expenses;
             data.CurrentMonthLargestExpense = await GetCurrentMonthLargestExpense(walletId, categoryId);
             data.MostSpentUser = await GetMostSpentUser(walletId, categoryId);
             data.MostUsedUser = await GetMostUsedUser(walletId, categoryId);
@@ -392,6 +332,7 @@ namespace Wallets_API.Repository
             data.SpentAll = await _context.Expenses.Where(e => e.FamilyWalletId == walletId
                                                         && e.ExpenseCategoryId == categoryId
                                                         && e.ExpenseUserId == userId).SumAsync(e => e.MoneySpent);
+
             return data;
         }
 
@@ -451,7 +392,7 @@ namespace Wallets_API.Repository
                                                         && e.CreationDate <= endOfCurrentMonth)
                                                         .ToListAsync();
             if (expenses.Count != 0)
-                return await expenses.AsQueryable().MaxAsync(e => e.MoneySpent);
+                return expenses.AsQueryable().Max(e => e.MoneySpent);
             else
                 return 0;
         }
@@ -499,7 +440,7 @@ namespace Wallets_API.Repository
             return mostSpentUser;
         }
 
-        private async Task<CategoryComparisonData> GetCurrentAndPreviousMonthsDataForCategory(int walletId, int categoryId)
+        private async Task<MonthsComparisonData> GetCurrentAndPreviousMonthsDataForCategory(int walletId, int categoryId)
         {
             var today = DateTime.Today;
             var currentMonth = new DateTime(today.Year, today.Month, 1);
@@ -512,7 +453,7 @@ namespace Wallets_API.Repository
             var lastMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == categoryId && e.CreationDate >= startOfPreviousMonth && e.CreationDate <= endOfPreviousMonth).SumAsync(e => e.MoneySpent);
             var currentMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == categoryId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(e => e.MoneySpent);
 
-            CategoryComparisonData data = new CategoryComparisonData
+            MonthsComparisonData data = new MonthsComparisonData
             {
                 CurrentMonthData = currentMonthData,
                 LastMonthData = lastMonthData,
@@ -533,60 +474,20 @@ namespace Wallets_API.Repository
             int categoryIdForSum, categoryIdForUsage;
             double largestExpense;
             GetUserTopCategories(walletId, userId, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
-
-            switch (categoryIdForSum)
+            if (largestExpense > 0)
             {
-                case 1:
-                    data.MostSpentCategory = "Food";
-                    break;
-                case 2:
-                    data.MostSpentCategory = "Housekeeping";
-                    break;
-                case 3:
-                    data.MostSpentCategory = "Clothes";
-                    break;
-                case 4:
-                    data.MostSpentCategory = "Entertainment";
-                    break;
-                case 5:
-                    data.MostSpentCategory = "Other";
-                    break;
-                default:
-                    data.MostSpentCategory = "Nothing";
-                    break;
+                data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
+                data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
+                data.AverageDailyExpense = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId).AverageAsync(e => e.MoneySpent), 2);
+
+                data.BarExpenses = await CreateBarExpensesDataForUser(walletId, userId);
+
+                data.BarCompareExpensesWithLastMonth = await GetCurrentAndPreviousMonthsDataForUser(walletId, userId);
+
+                data.LastSixMonths = await GetLastSixMonthsOfDataForUser(walletId, userId);
+
+                data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId).SumAsync(s => s.MoneySpent);
             }
-            switch (categoryIdForUsage)
-            {
-                case 1:
-                    data.MostUsedCategory = "Food";
-                    break;
-                case 2:
-                    data.MostUsedCategory = "Housekeeping";
-                    break;
-                case 3:
-                    data.MostUsedCategory = "Clothes";
-                    break;
-                case 4:
-                    data.MostUsedCategory = "Entertainment";
-                    break;
-                case 5:
-                    data.MostUsedCategory = "Other";
-                    break;
-                default:
-                    data.MostUsedCategory = "Nothing";
-                    break;
-            }
-
-            data.AverageDailyExpense = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId).AverageAsync(e => e.MoneySpent), 2);
-
-            data.BarExpenses = await CreateBarExpensesDataForUser(walletId, userId);
-
-            data.BarCompareExpensesWithLastMonth = await GetCurrentAndPreviousMonthsDataForUser(walletId, userId);
-
-            data.LastSixMonths = await GetLastSixMonthsOfDataForUser(walletId, userId);
-
-            data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId).SumAsync(s => s.MoneySpent);
-
             return data;
 
         }
@@ -600,31 +501,35 @@ namespace Wallets_API.Repository
                 CategoryId = res.First().ExpenseCategoryId,
                 LargestExpense = res.Max(e => e.MoneySpent)
             });
-            largestExpense = sumForCategory.Max(m => m.LargestExpense);
-            categoryIdForSum = sumForCategory.OrderByDescending(e => e.Sum).Select(c => c.CategoryId).First();
-            categoryIdForUsage = sumForCategory.OrderByDescending(e => e.Usage).Select(c => c.CategoryId).First();
-        }
-
-        private async Task<BarExpensesDTO> CreateBarExpensesDataForUser(int walletId, string userId)
-        {
-            //TODO: проверить что будет если везде будет 0
-            var foodData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 1 && e.FamilyWalletId == walletId && e.ExpenseUserId == userId).SumAsync(e => e.MoneySpent);
-            var houseData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 2 && e.FamilyWalletId == walletId && e.ExpenseUserId == userId).SumAsync(e => e.MoneySpent);
-            var clothesData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 3 && e.FamilyWalletId == walletId && e.ExpenseUserId == userId).SumAsync(e => e.MoneySpent);
-            var enterData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 4 && e.FamilyWalletId == walletId && e.ExpenseUserId == userId).SumAsync(e => e.MoneySpent);
-            var otherData = await _context.Expenses.Where(e => e.ExpenseCategoryId == 5 && e.FamilyWalletId == walletId && e.ExpenseUserId == userId).SumAsync(e => e.MoneySpent);
-            BarExpensesDTO barExpenses = new BarExpensesDTO
+            if (sumForCategory.ToList().Count != 0)
             {
-                HouseExpenses = houseData,
-                FoodExpenses = foodData,
-                EntertainmentExpenses = enterData,
-                ClothesExpenses = clothesData,
-                OtherExpenses = otherData
-            };
-            return barExpenses;
+                largestExpense = sumForCategory.Max(m => m.LargestExpense);
+                categoryIdForSum = sumForCategory.OrderByDescending(e => e.Sum).Select(c => c.CategoryId).First();
+                categoryIdForUsage = sumForCategory.OrderByDescending(e => e.Usage).Select(c => c.CategoryId).First();
+            }
+            else
+            {
+                largestExpense = 0;
+                categoryIdForSum = 0;
+                categoryIdForUsage = 0;
+            }
         }
 
-        private async Task<BarComparison> GetCurrentAndPreviousMonthsDataForUser(int walletId, string userId)
+        private async Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesDataForUser(int walletId, string userId)
+        {
+
+            List<CategoriesAndExpensesDTO> expenses = new List<CategoriesAndExpensesDTO>();
+            foreach (var category in _context.WalletsCategories.Where(w => w.WalletId == walletId).AsEnumerable())
+            {
+                CategoriesAndExpensesDTO categoriesAndExpenses = new CategoriesAndExpensesDTO();
+                categoriesAndExpenses.CategoryExpenses = _context.Expenses.Where(e => e.ExpenseCategoryId == category.CategoryId && e.FamilyWalletId == walletId && e.ExpenseUserId == userId).Sum(e => e.MoneySpent);
+                expenses.Add(categoriesAndExpenses);
+            }
+
+            return expenses;
+        }
+
+        private async Task<MonthsComparisonData> GetCurrentAndPreviousMonthsDataForUser(int walletId, string userId)
         {
             var today = DateTime.Today;
             var currentMonth = new DateTime(today.Year, today.Month, 1);
@@ -634,46 +539,16 @@ namespace Wallets_API.Repository
 
 
 
-            var lastMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= startOfPreviousMonth && e.CreationDate <= endOfPreviousMonth).ToListAsync();
-            var currentMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).ToListAsync();
+            var lastMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= startOfPreviousMonth && e.CreationDate <= endOfPreviousMonth).SumAsync(e => e.MoneySpent);
+            var currentMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(e => e.MoneySpent);
 
-            var lastFoodData = lastMonthData.Where(d => d.ExpenseCategoryId == 1).Sum(e => e.MoneySpent);
-            var lastHouseData = lastMonthData.Where(d => d.ExpenseCategoryId == 2).Sum(e => e.MoneySpent);
-            var lastClothesData = lastMonthData.Where(d => d.ExpenseCategoryId == 3).Sum(e => e.MoneySpent);
-            var lastEntData = lastMonthData.Where(d => d.ExpenseCategoryId == 4).Sum(e => e.MoneySpent);
-            var lastOtherData = lastMonthData.Where(d => d.ExpenseCategoryId == 5).Sum(e => e.MoneySpent);
-
-            BarExpensesDTO lastBarExpenses = new BarExpensesDTO
+            MonthsComparisonData data = new MonthsComparisonData
             {
-                HouseExpenses = lastHouseData,
-                FoodExpenses = lastFoodData,
-                EntertainmentExpenses = lastEntData,
-                ClothesExpenses = lastClothesData,
-                OtherExpenses = lastOtherData
+                CurrentMonthData = currentMonthData,
+                LastMonthData = lastMonthData,
             };
 
-            var currentFoodData = currentMonthData.Where(d => d.ExpenseCategoryId == 1).Sum(e => e.MoneySpent);
-            var currentHouseData = currentMonthData.Where(d => d.ExpenseCategoryId == 2).Sum(e => e.MoneySpent);
-            var currentClothesData = currentMonthData.Where(d => d.ExpenseCategoryId == 3).Sum(e => e.MoneySpent);
-            var currentEntData = currentMonthData.Where(d => d.ExpenseCategoryId == 4).Sum(e => e.MoneySpent);
-            var currentOtherData = currentMonthData.Where(d => d.ExpenseCategoryId == 5).Sum(e => e.MoneySpent);
-
-            BarExpensesDTO currentbarExpenses = new BarExpensesDTO
-            {
-                HouseExpenses = currentHouseData,
-                FoodExpenses = currentFoodData,
-                EntertainmentExpenses = currentEntData,
-                ClothesExpenses = currentClothesData,
-                OtherExpenses = currentOtherData
-            };
-
-            BarComparison barComparison = new BarComparison
-            {
-                CurrentMonthData = currentbarExpenses,
-                LastMonthData = lastBarExpenses
-            };
-
-            return barComparison;
+            return data;
         }
 
         private async Task<List<LastMonthData>> GetLastSixMonthsOfDataForUser(int walletId, string userId)

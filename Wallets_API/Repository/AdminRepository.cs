@@ -18,6 +18,27 @@ namespace Wallets_API.Repository
             _context = context;
             _userManager = userManager;
         }
+
+        public async Task<List<ExpenseForAdminDTO>> GetAllExpenses(int walletId)
+        {
+            var expenses = await(from e in _context.Expenses
+                                 join u in _context.Users
+                                 on e.ExpenseUserId equals u.Id
+                                 join c in _context.ExpenseCategories
+                                 on e.ExpenseCategoryId equals c.Id
+                                 where e.FamilyWalletId == walletId
+                                 select new ExpenseForAdminDTO
+                                 {
+                                     UserName = u.UserName,
+                                     ExpenseTitle = e.ExpenseName,
+                                     ExpenseDescription = e.ExpenseDescription,
+                                     CreationDate = e.CreationDate,
+                                     MoneySpent = e.MoneySpent,
+                                     Category = c.Title
+                                 }).ToListAsync();
+            return expenses;
+        }
+
         public async Task<List<UserToReturnToAdmin>> GetUserData(int walletId)
         {
             //TODO: добавить роли

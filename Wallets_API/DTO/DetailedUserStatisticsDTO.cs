@@ -11,8 +11,8 @@ namespace Wallets_API.DTO
         public string MostSpentCategory { get; set; }
         public string MostUsedCategory { get; set; }
         public double AverageDailyExpense { get; set; }
-        public BarExpensesDTO BarExpenses { get; set; }
-        public BarComparison BarCompareExpensesWithLastMonth { get; set; }
+        public List<CategoriesAndExpensesDTO> BarExpenses { get; set; }
+        public MonthsComparisonData BarCompareExpensesWithLastMonth { get; set; }
         public List<LastMonthData> LastSixMonths { get; set; }
         public double AmountOfMoneySpent { get; set; }
     }

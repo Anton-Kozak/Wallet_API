@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Wallets_API.DBClasses;
 using Wallets_API.Models.CustomModels;
 
 namespace Wallets_API.DTO
@@ -13,11 +14,12 @@ namespace Wallets_API.DTO
         public UserStatistics MostSpentUser { get; set; }
         public UserStatistics MostUsedUser { get; set; }
 
-        public CategoryComparisonData BarCompareExpensesWithLastMonth { get; set; }
+        public MonthsComparisonData BarCompareExpensesWithLastMonth { get; set; }
         public List<UserStatistics> TopFiveUsers { get; set; }
         public List<LastMonthData> LastSixMonths { get; set; }
         public double SpentThisMonth { get; set; }
         public double SpentAll { get; set; }
+        public List<ExpenseDTO> CategoryExpenses { get; set; }
 
     }
 }

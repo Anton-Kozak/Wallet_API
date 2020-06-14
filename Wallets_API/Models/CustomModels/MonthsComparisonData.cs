@@ -6,7 +6,7 @@ using Wallets_API.DBClasses;
 
 namespace Wallets_API.Models.CustomModels
 {
-    public class CategoryComparisonData
+    public class MonthsComparisonData
     {
         public double CurrentMonthData { get; set; }
         public double LastMonthData { get; set; }

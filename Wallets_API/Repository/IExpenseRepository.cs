@@ -15,7 +15,7 @@ namespace Wallets_API.Repository
         Task<WalletToReturnDTO> GetWalletData(int walletId);
         Task<List<ExpenseDTO>> ShowCategoryExpenses(int walletId, int categoryId);
         Task<Expense> CreateNewExpense(Expense newExpense);
-        Task<BarExpensesDTO> CreateBarExpensesData(int walletId);
+        Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesData(int walletId);
         Task<DetailedWalletStatisticsDTO> DetailedWalletStatistics(int walletId);
         Task<DetailedCategoryStatisticsDTO> DetailedCategoryStatistics(int walletId, int categoryId, string userId);
         Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId);
