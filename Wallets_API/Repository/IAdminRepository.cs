@@ -13,5 +13,7 @@ namespace Wallets_API.Repository
         Task<List<UserToReturnToAdmin>> GetUserData(int walletId);
         Task<bool> RemoveUserAsync(ApplicationUser userToRemove);
         Task <List<ExpenseForAdminDTO>> GetAllExpenses(int walletId);
+        Task<ResponseData> DeleteExpense(int expenseId);
+        Task<ResponseData> EditExpense(ExpenseDTO expenseToEdit);
     }
 }

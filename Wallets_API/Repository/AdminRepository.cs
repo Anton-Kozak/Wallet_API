@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Wallets_API.Data;
 using Wallets_API.DTO;
 using Wallets_API.Models;
+using Wallets_API.Models.CustomModels;
 
 namespace Wallets_API.Repository
 {
@@ -29,6 +30,7 @@ namespace Wallets_API.Repository
                                  where e.FamilyWalletId == walletId
                                  select new ExpenseForAdminDTO
                                  {
+                                     Id = e.Id,
                                      UserName = u.UserName,
                                      ExpenseTitle = e.ExpenseName,
                                      ExpenseDescription = e.ExpenseDescription,
@@ -36,7 +38,9 @@ namespace Wallets_API.Repository
                                      MoneySpent = e.MoneySpent,
                                      Category = c.Title
                                  }).ToListAsync();
-            return expenses;
+
+            var reversedExpenses = expenses.Reverse<ExpenseForAdminDTO>().ToList();
+            return reversedExpenses;
         }
 
         public async Task<List<UserToReturnToAdmin>> GetUserData(int walletId)
@@ -68,6 +72,52 @@ namespace Wallets_API.Repository
                 return true;
             }
             return false;
+        }
+
+        public async Task<ResponseData> DeleteExpense(int expenseId)
+        {
+            ResponseData data = new ResponseData
+            {
+                isSuccessful = false,
+                Message = "",
+            };
+            var expenseToDelete = await _context.Expenses.Where(e => e.Id == expenseId).FirstOrDefaultAsync();
+
+            if (expenseToDelete != null)
+            {
+                _context.Expenses.Remove(expenseToDelete);
+                await _context.SaveChangesAsync();
+                data.isSuccessful = true;
+                data.Message = "Expense has been successfully deleted";
+                return data;
+            }
+            data.Message = "Expense has not been found";
+            return data;
+        }
+
+        public async Task<ResponseData> EditExpense(ExpenseDTO expenseToEdit)
+        {
+            ResponseData data = new ResponseData
+            {
+                isSuccessful = false,
+                Message = "",
+            };
+            var expToEdit = await _context.Expenses.Where(e => e.Id == expenseToEdit.Id).FirstOrDefaultAsync();
+
+            if (expToEdit != null)
+            {
+                expToEdit.ExpenseName = expenseToEdit.ExpenseTitle;
+                expToEdit.ExpenseDescription = expenseToEdit.ExpenseDescription;
+                expToEdit.MoneySpent = expenseToEdit.MoneySpent;
+                expToEdit.CreationDate = expenseToEdit.CreationDate;
+                _context.Expenses.Update(expToEdit);
+                await _context.SaveChangesAsync();
+                data.isSuccessful = true;
+                data.Message = "Expense has been successfully edited";
+                return data;
+            }
+            data.Message = "Expense has not been found";
+            return data;
         }
     }
 }

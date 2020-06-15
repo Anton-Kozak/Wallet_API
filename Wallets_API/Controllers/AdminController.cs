@@ -74,7 +74,7 @@ namespace Wallets_API.Controllers
                 if (user != null && user.IsWalletAdmin)
                 {
                     var expensesForAdmin = await _repo.GetAllExpenses(user.WalletID);
-                        return Ok(expensesForAdmin);
+                    return Ok(expensesForAdmin);
                 }
                 return BadRequest("User has not been found");
             }
@@ -82,6 +82,43 @@ namespace Wallets_API.Controllers
         }
 
 
+        [HttpDelete("expenseDelete/{expenseId}")]
+        public async Task<IActionResult> DeleteExpense(string userId, int expenseId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user != null)
+                {
+                    var result = await _repo.DeleteExpense(expenseId);
+                    if (result.isSuccessful)
+                        return Ok(result.Message);
+                    return BadRequest(result.Message);
+                }
+                return BadRequest("No user hsa been found");
+            }
+            return Unauthorized();
+        }
+
+        [HttpPut("expenseEdit/{expenseId}")]
+        public async Task<IActionResult> EditExpense(string userId, int expenseId, ExpenseDTO expense)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user != null)
+                {
+                    var result = await _repo.EditExpense(expense);
+                    if (result.isSuccessful)
+                        return Ok(result.Message);
+                    return BadRequest(result.Message);
+                }
+                return BadRequest("No user has been found");
+            }
+            return Unauthorized();
+        }
     }
 
 

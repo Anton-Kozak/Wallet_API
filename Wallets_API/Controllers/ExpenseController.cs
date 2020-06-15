@@ -233,7 +233,7 @@ namespace Wallets_API.Controllers
         }
 
         [HttpPut("expenseEdit/{expenseId}")]
-        public async Task<IActionResult> DeleteExpense(string userId, int expenseId, ExpenseDTO expense)
+        public async Task<IActionResult> EditExpense(string userId, int expenseId, ExpenseDTO expense)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
