@@ -178,37 +178,42 @@ namespace Wallets_API.Repository
         public async Task<DetailedWalletStatisticsDTO> DetailedWalletStatistics(int walletId)
         {
             DetailedWalletStatisticsDTO data = new DetailedWalletStatisticsDTO();
+            data.hasExpenseData = false;
             //получить категории в которых больше трат и использований
             int categoryIdForSum, categoryIdForUsage;
             double largestExpense;
             GetWalletTopCategories(walletId, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
+            if (largestExpense > 0)
+            {
+                data.hasExpenseData = true;
+                data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
+                data.MostUsedCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
 
-            data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
-            data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
-
-            //средние показатели расходов
-            data.AverageDailyExpense = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId).AverageAsync(e => e.MoneySpent), 2);
+                //средние показатели расходов
+                data.AverageDailyExpense = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId).AverageAsync(e => e.MoneySpent), 2);
 
 
-            //общие показатели по всем категориям за всё время
-            //TODO: потом поменять на данный месяц?
-            data.BarExpenses = await CreateBarExpensesData(walletId);
+                //общие показатели по всем категориям за всё время
+                //TODO: потом поменять на данный месяц?
+                data.BarExpenses = await CreateBarExpensesData(walletId);
 
-            //получить данные предыдущего и текущего месяцев для сравнения по всем категориям всех пользователей данного кошелька
-            data.BarCompareExpensesWithLastMonth = await GetCurrentAndPreviousMonthsData(walletId);
+                //получить данные предыдущего и текущего месяцев для сравнения по всем категориям всех пользователей данного кошелька
+                data.BarCompareExpensesWithLastMonth = await GetCurrentAndPreviousMonthsData(walletId);
 
-            //данные о 5 пользователях с наибольшим кол-вом трат в кошельке
-            data.TopFiveUsers = await GetTopMembers(walletId);
+                //данные о 5 пользователях с наибольшим кол-вом трат в кошельке
+                data.TopFiveUsers = await GetTopMembers(walletId);
 
-            data.LastSixMonths = await GetLastSixMonthsOfData(walletId);
+                data.LastSixMonths = await GetLastSixMonthsOfData(walletId);
 
+                
+
+
+                data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId).SumAsync(s => s.MoneySpent);
+            }
             //wallet members
             var users = await _context.Users.Where(u => u.WalletID == walletId).ToListAsync();
             var usersToReturn = _mapper.Map<UserForDisplayDTO[]>(users);
             data.WalletUsers = usersToReturn;
-
-            data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId).SumAsync(s => s.MoneySpent);
-
             return data;
         }
 
@@ -302,9 +307,18 @@ namespace Wallets_API.Repository
                 CategoryId = res.First().ExpenseCategoryId,
                 LargestExpense = res.Max(e => e.MoneySpent)
             });
-            largestExpense = sumForCategory.Max(m => m.LargestExpense);
-            categoryIdForSum = sumForCategory.OrderByDescending(e => e.Sum).Select(c => c.CategoryId).First();
-            categoryIdForUsage = sumForCategory.OrderByDescending(e => e.Usage).Select(c => c.CategoryId).First();
+            if (sumForCategory.ToList().Count != 0)
+            {
+                largestExpense = sumForCategory.Max(m => m.LargestExpense);
+                categoryIdForSum = sumForCategory.OrderByDescending(e => e.Sum).Select(c => c.CategoryId).First();
+                categoryIdForUsage = sumForCategory.OrderByDescending(e => e.Usage).Select(c => c.CategoryId).First();
+            }
+            else
+            {
+                largestExpense = 0;
+                categoryIdForSum = 0;
+                categoryIdForUsage = 0;
+            }
         }
 
 
@@ -477,7 +491,7 @@ namespace Wallets_API.Repository
             if (largestExpense > 0)
             {
                 data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
-                data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
+                data.MostUsedCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
                 data.AverageDailyExpense = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId).AverageAsync(e => e.MoneySpent), 2);
 
                 data.BarExpenses = await CreateBarExpensesDataForUser(walletId, userId);

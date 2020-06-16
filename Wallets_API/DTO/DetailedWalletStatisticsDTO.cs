@@ -8,6 +8,7 @@ namespace Wallets_API.DTO
 {
     public class DetailedWalletStatisticsDTO
     {
+        public bool hasExpenseData { get; set; }
         public string MostSpentCategory { get; set; }
         public string MostUsedCategory { get; set; }
         public double AverageDailyExpense { get; set; }
