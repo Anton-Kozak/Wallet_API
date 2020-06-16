@@ -205,7 +205,7 @@ namespace Wallets_API.Repository
 
                 data.LastSixMonths = await GetLastSixMonthsOfData(walletId);
 
-                
+
 
 
                 data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId).SumAsync(s => s.MoneySpent);
@@ -492,8 +492,11 @@ namespace Wallets_API.Repository
             {
                 data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
                 data.MostUsedCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
-                data.AverageDailyExpense = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId).AverageAsync(e => e.MoneySpent), 2);
-
+                var avgExp = _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId);
+                if (avgExp.Count() != 0)
+                    data.AverageDailyExpense = Math.Round(await avgExp.AverageAsync(e => e.MoneySpent), 2);
+                else
+                    data.AverageDailyExpense = 0;
                 data.BarExpenses = await CreateBarExpensesDataForUser(walletId, userId);
 
                 data.BarCompareExpensesWithLastMonth = await GetCurrentAndPreviousMonthsDataForUser(walletId, userId);

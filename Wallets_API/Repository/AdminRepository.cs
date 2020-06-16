@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Wallets_API.Data;
+using Wallets_API.DBClasses;
 using Wallets_API.DTO;
 using Wallets_API.Models;
 using Wallets_API.Models.CustomModels;
@@ -95,13 +96,8 @@ namespace Wallets_API.Repository
             return data;
         }
 
-        public async Task<ResponseData> EditExpense(ExpenseDTO expenseToEdit)
+        public async Task<Expense> EditExpense(ExpenseDTO expenseToEdit)
         {
-            ResponseData data = new ResponseData
-            {
-                isSuccessful = false,
-                Message = "",
-            };
             var expToEdit = await _context.Expenses.Where(e => e.Id == expenseToEdit.Id).FirstOrDefaultAsync();
 
             if (expToEdit != null)
@@ -112,12 +108,9 @@ namespace Wallets_API.Repository
                 expToEdit.CreationDate = expenseToEdit.CreationDate;
                 _context.Expenses.Update(expToEdit);
                 await _context.SaveChangesAsync();
-                data.isSuccessful = true;
-                data.Message = "Expense has been successfully edited";
-                return data;
+                return expToEdit;
             }
-            data.Message = "Expense has not been found";
-            return data;
+            return null;
         }
     }
 }

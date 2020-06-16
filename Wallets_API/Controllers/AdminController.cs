@@ -110,10 +110,10 @@ namespace Wallets_API.Controllers
 
                 if (user != null)
                 {
-                    var result = await _repo.EditExpense(expense);
-                    if (result.isSuccessful)
-                        return Ok(result.Message);
-                    return BadRequest(result.Message);
+                    var editedExpense = await _repo.EditExpense(expense);
+                    if (editedExpense != null)
+                        return Ok(editedExpense);
+                    return BadRequest();
                 }
                 return BadRequest("No user has been found");
             }
