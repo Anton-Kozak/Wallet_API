@@ -23,22 +23,22 @@ namespace Wallets_API.Repository
 
         public async Task<List<ExpenseForAdminDTO>> GetAllExpenses(int walletId)
         {
-            var expenses = await(from e in _context.Expenses
-                                 join u in _context.Users
-                                 on e.ExpenseUserId equals u.Id
-                                 join c in _context.ExpenseCategories
-                                 on e.ExpenseCategoryId equals c.Id
-                                 where e.FamilyWalletId == walletId
-                                 select new ExpenseForAdminDTO
-                                 {
-                                     Id = e.Id,
-                                     UserName = u.UserName,
-                                     ExpenseTitle = e.ExpenseName,
-                                     ExpenseDescription = e.ExpenseDescription,
-                                     CreationDate = e.CreationDate,
-                                     MoneySpent = e.MoneySpent,
-                                     Category = c.Title
-                                 }).ToListAsync();
+            var expenses = await (from e in _context.Expenses
+                                  join u in _context.Users
+                                  on e.ExpenseUserId equals u.Id
+                                  join c in _context.ExpenseCategories
+                                  on e.ExpenseCategoryId equals c.Id
+                                  where e.FamilyWalletId == walletId
+                                  select new ExpenseForAdminDTO
+                                  {
+                                      Id = e.Id,
+                                      UserName = u.UserName,
+                                      ExpenseTitle = e.ExpenseName,
+                                      ExpenseDescription = e.ExpenseDescription,
+                                      CreationDate = e.CreationDate,
+                                      MoneySpent = e.MoneySpent,
+                                      Category = c.Title
+                                  }).ToListAsync();
 
             var reversedExpenses = expenses.Reverse<ExpenseForAdminDTO>().ToList();
             return reversedExpenses;
@@ -65,9 +65,11 @@ namespace Wallets_API.Repository
             return users;
         }
 
-        public async Task<bool> RemoveUserAsync(ApplicationUser userToRemove)
+        public async Task<bool> RemoveUserAsync(ApplicationUser userToRemove, int walletId)
         {
             userToRemove.WalletID = 0;
+            var wallet = await _context.Wallets.Where(w => w.Id == walletId).FirstOrDefaultAsync();
+            wallet.UserNumber--;
             if (await _context.SaveChangesAsync() > 0)
             {
                 return true;
@@ -102,7 +104,7 @@ namespace Wallets_API.Repository
 
             if (expToEdit != null)
             {
-                expToEdit.ExpenseName = expenseToEdit.ExpenseTitle;
+                expToEdit.ExpenseName = expenseToEdit.ExpenseName;
                 expToEdit.ExpenseDescription = expenseToEdit.ExpenseDescription;
                 expToEdit.MoneySpent = expenseToEdit.MoneySpent;
                 expToEdit.CreationDate = expenseToEdit.CreationDate;

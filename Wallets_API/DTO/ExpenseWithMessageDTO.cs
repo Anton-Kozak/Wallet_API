@@ -8,7 +8,7 @@ namespace Wallets_API.DTO
 {
     public class ExpenseWithMessageDTO
     {
-        public Expense Expense { get; set; }
+        public ExpenseDTO Expense { get; set; }
         public string Message { get; set; }
     }
 }

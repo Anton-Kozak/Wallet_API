@@ -30,36 +30,43 @@ namespace Wallets_API.Repository
 
             var requester = await _context.Users.Where(u => u.Id == requesterId).FirstOrDefaultAsync();
             var walletOwner = await _context.Users.Where(u => u.Email == userToRequestEmail).FirstOrDefaultAsync();
+
             if (walletOwner != null)
             {
-                if (walletOwner.WalletID != 0)
+                if (walletOwner.WalletID != 0 && walletOwner.IsWalletAdmin)
                 {
-                    bool hasRequests = await _context.Requests.Where(r => r.RequestCreatorId == requesterId && r.WalletId == walletOwner.WalletID).AnyAsync();
-                    if (hasRequests)
+                    var wallet = await _context.Wallets.Where(w => w.Id == walletOwner.WalletID).FirstOrDefaultAsync();
+                    if (wallet.UserNumber < 5)
                     {
-                        responseData.Message = "You have already requested access to this wallet!";
-                        return responseData;
-                    }
-                    if (requester != walletOwner)
-                    {
-                        Request request = new Request();
-                        request.InviteCreationTime = DateTime.Now;
-                        request.RequestCreatorId = requesterId;
-                        request.RequestReceiverEmail = userToRequestEmail;
-                        request.WalletId = walletOwner.WalletID;
-                        await _context.Requests.AddAsync(request);
-                        if (await _context.SaveChangesAsync() > 0)
+                        bool hasRequests = await _context.Requests.Where(r => r.RequestCreatorId == requesterId && r.WalletId == walletOwner.WalletID).AnyAsync();
+                        if (hasRequests)
                         {
-                            responseData.isSuccessful = true;
-                            responseData.Message = $"You have successfully sent a request to {userToRequestEmail}";
+                            responseData.Message = "You have already requested access to this wallet!";
                             return responseData;
                         }
-                        responseData.isSuccessful = false;
-                        responseData.Message = $"Notification was not created";
-                        return responseData;
+                        if (requester != walletOwner)
+                        {
+                            Request request = new Request();
+                            request.InviteCreationTime = DateTime.Now;
+                            request.RequestCreatorId = requesterId;
+                            request.RequestReceiverEmail = userToRequestEmail;
+                            request.WalletId = walletOwner.WalletID;
+                            await _context.Requests.AddAsync(request);
+                            if (await _context.SaveChangesAsync() > 0)
+                            {
+                                responseData.isSuccessful = true;
+                                responseData.Message = $"You have successfully sent a request to {userToRequestEmail}";
+                                return responseData;
+                            }
+                            responseData.isSuccessful = false;
+                            responseData.Message = $"Notification was not created";
+                            return responseData;
+                        }
                     }
-
+                    responseData.Message = "Wallet has already max users";
+                    return responseData;
                 }
+                responseData.Message = "User has no wallet or is not a wallet admin";
                 return responseData;
             }
             responseData.Message = $"The user {userToRequestEmail} does not have a wallet";
@@ -87,26 +94,32 @@ namespace Wallets_API.Repository
                 isSuccessful = false,
                 Message = "User has not been found",
             };
-
-            var user = await _context.Users.Where(u => u.Email == emailToAccept).FirstOrDefaultAsync();
-            if (user != null)
+            var wallet = await _context.Wallets.Where(w => w.Id == walletId).FirstOrDefaultAsync();
+            if (wallet.UserNumber < 5)
             {
-                var request = await _context.Requests.Where(r => r.RequestCreatorId == user.Id && r.WalletId == walletId).FirstOrDefaultAsync();
-                if (request != null)
+                var user = await _context.Users.Where(u => u.Email == emailToAccept).FirstOrDefaultAsync();
+                if (user != null)
                 {
-                    user.WalletID = walletId;
-                    user.DateJoined = DateTime.Now;
-                    _context.Update(user);
-                    await _context.SaveChangesAsync();
-                    responseData.isSuccessful = true;
-                    await RemoveInvitesAndRequests(user);
-                    responseData.Message = $"You have successfully accepted a request from {emailToAccept}";
+                    var request = await _context.Requests.Where(r => r.RequestCreatorId == user.Id && r.WalletId == walletId).FirstOrDefaultAsync();
+                    if (request != null)
+                    {
+                        user.WalletID = walletId;
+                        user.DateJoined = DateTime.Now;
+                        _context.Update(user);
+                        responseData.isSuccessful = true;
+                        await RemoveInvitesAndRequests(user);
+                        wallet.UserNumber++;
+                        await _context.SaveChangesAsync();
+                        responseData.Message = $"You have successfully accepted a request from {emailToAccept}";
 
+                        return responseData;
+                    }
+                    responseData.Message = "Request has not been found";
                     return responseData;
                 }
-                responseData.Message = "Request has not been found";
                 return responseData;
             }
+            responseData.Message = "Wallet has reached its user limit";
             return responseData;
         }
 

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -17,6 +19,7 @@ namespace Wallets_API.Controllers
     //TODO: сделать проверку на то, является ли пользователь тем кем нужно
     [Route("api/[controller]/{userId}/")]
     [ApiController]
+    [AllowAnonymous]
     //[Authorize(Policy = "Member")]
     public class ExpenseController : ControllerBase
     {
@@ -25,13 +28,15 @@ namespace Wallets_API.Controllers
         private readonly IExpenseRepository _expenseRepository;
         private readonly INotificationRepository _notificationRepository;
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
         public ExpenseController(UserManager<ApplicationUser> userManager, IExpenseRepository expenseRepository,
-            INotificationRepository notificationRepository, ApplicationDbContext context)
+            INotificationRepository notificationRepository, ApplicationDbContext context, IMapper mapper)
         {
             _userManager = userManager;
             _expenseRepository = expenseRepository;
             _notificationRepository = notificationRepository;
             _context = context;
+            _mapper = mapper;
         }
 
         private string GetCategoryName(int categoryId)
@@ -200,8 +205,10 @@ namespace Wallets_API.Controllers
                                 expenseWithMessage.Message = "You have reached 75% of wallet's limit!!";
                                 await _notificationRepository.CreateNotification(user.Id, walletAdmin.Id, "75", expenseWithMessage.Message, false);
                             }
-
-                            expenseWithMessage.Expense = newExpense;
+                            ExpenseDTO expenseToReturn = new ExpenseDTO();
+                            expenseToReturn = _mapper.Map<ExpenseDTO>(newExpense);
+                            expenseToReturn.UserName = user.UserName;
+                            expenseWithMessage.Expense = expenseToReturn;
                             return Ok(expenseWithMessage);
                         }
                         return BadRequest("Something went wrong");
@@ -241,10 +248,10 @@ namespace Wallets_API.Controllers
 
                 if (user != null)
                 {
-                    var result = await _expenseRepository.EditExpense(userId, expense);
-                    if (result.isSuccessful)
-                        return Ok(result.Message);
-                    return BadRequest(result.Message);
+                    var expToEdit = await _expenseRepository.EditExpense(userId, expense);
+                    if (expToEdit != null)
+                        return Ok(expToEdit);
+                    return BadRequest();
                 }
                 return BadRequest("No user has been found");
             }

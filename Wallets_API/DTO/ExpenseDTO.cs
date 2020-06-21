@@ -9,8 +9,9 @@ namespace Wallets_API.DTO
     {
         public int Id { get; set; }
         public string UserName { get; set; }
-        public string ExpenseTitle { get; set; }
+        public string ExpenseName { get; set; }
         public string ExpenseDescription { get; set; }
+        public string ExpenseCategory { get; set; }
         public DateTime CreationDate { get; set; }
         public double MoneySpent { get; set; }
     }

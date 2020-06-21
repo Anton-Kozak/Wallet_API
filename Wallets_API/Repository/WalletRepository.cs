@@ -24,6 +24,7 @@ namespace Wallets_API.Repository
 
         public async Task<bool> CreateWallet(Wallet wallet, ApplicationUser user)
         {
+            wallet.UserNumber = 1;
             _context.Wallets.Add(wallet);
 
             if (await _context.SaveChangesAsync() > 0)

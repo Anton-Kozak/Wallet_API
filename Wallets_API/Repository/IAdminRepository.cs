@@ -12,7 +12,7 @@ namespace Wallets_API.Repository
     public interface IAdminRepository
     {
         Task<List<UserToReturnToAdmin>> GetUserData(int walletId);
-        Task<bool> RemoveUserAsync(ApplicationUser userToRemove);
+        Task<bool> RemoveUserAsync(ApplicationUser userToRemove, int walletId);
         Task <List<ExpenseForAdminDTO>> GetAllExpenses(int walletId);
         Task<ResponseData> DeleteExpense(int expenseId);
         Task<Expense> EditExpense(ExpenseDTO expenseToEdit);

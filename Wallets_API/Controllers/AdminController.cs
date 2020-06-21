@@ -55,7 +55,7 @@ namespace Wallets_API.Controllers
                 var userToRemove = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == removeUserId);
                 if (user != null && user.IsWalletAdmin && user.WalletID == userToRemove.WalletID && userToRemove != null)
                 {
-                    var result = await _repo.RemoveUserAsync(userToRemove);
+                    var result = await _repo.RemoveUserAsync(userToRemove, userToRemove.WalletID);
                     if (result)
                         return Ok($"User {userToRemove.UserName} has been removed");
                 }

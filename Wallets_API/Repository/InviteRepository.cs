@@ -46,40 +46,45 @@ namespace Wallets_API.Repository
                 isSuccessful = false,
                 Message = "User is incorrect or you do not have a wallet",
             };
-
-            var inviter = await _context.Users.Where(u => u.Id == inviterId).FirstOrDefaultAsync();
-            var invitee = await _context.Users.Where(u => u.Email == inviteeEmail).FirstOrDefaultAsync();
-            if (invitee != null && inviter != null && inviter.WalletID != 0)
+            var wallet = await _context.Wallets.Where(w => w.Id == walletId).FirstOrDefaultAsync();
+            if (wallet.UserNumber < 5)
             {
-                if (inviter != invitee)
+                var inviter = await _context.Users.Where(u => u.Id == inviterId).FirstOrDefaultAsync();
+                var invitee = await _context.Users.Where(u => u.Email == inviteeEmail).FirstOrDefaultAsync();
+                if (invitee != null && inviter != null && inviter.WalletID != 0)
                 {
-                    var hasInviteToThisWallet = await _context.Invites.Where(i => i.WalletId == walletId && i.InviteReceiverEmail == inviteeEmail).AnyAsync();
-                    if (!hasInviteToThisWallet)
+                    if (inviter != invitee)
                     {
-                        //TODO: сделать более информативную систему ошибок
-                        if (invitee.WalletID == 0)
+                        var hasInviteToThisWallet = await _context.Invites.Where(i => i.WalletId == walletId && i.InviteReceiverEmail == inviteeEmail).AnyAsync();
+                        if (!hasInviteToThisWallet)
                         {
-                            Invite invite = new Invite();
-                            invite.InviteCreationTime = DateTime.Now;
-                            invite.InviteCreatorId = inviterId;
-                            invite.InviteReceiverEmail = invitee.Email;
-                            invite.WalletTitle = await _context.Wallets.Where(w => w.Id == walletId && w.WalletCreatorID == inviterId).Select(s => s.Title).FirstOrDefaultAsync();
-                            invite.WalletId = walletId;
-                            await _context.Invites.AddAsync(invite);
-                            if (await _context.SaveChangesAsync() > 0)
+                            //TODO: сделать более информативную систему ошибок
+                            if (invitee.WalletID == 0)
                             {
-                                responseData.isSuccessful = true;
-                                responseData.Message = $"You have sent an invitation to {inviteeEmail}";
-                                return responseData;
+                                Invite invite = new Invite();
+                                invite.InviteCreationTime = DateTime.Now;
+                                invite.InviteCreatorId = inviterId;
+                                invite.InviteReceiverEmail = invitee.Email;
+                                invite.WalletTitle = await _context.Wallets.Where(w => w.Id == walletId && w.WalletCreatorID == inviterId).Select(s => s.Title).FirstOrDefaultAsync();
+                                invite.WalletId = walletId;
+                                await _context.Invites.AddAsync(invite);
+                                if (await _context.SaveChangesAsync() > 0)
+                                {
+                                    responseData.isSuccessful = true;
+                                    responseData.Message = $"You have sent an invitation to {inviteeEmail}";
+                                    return responseData;
+                                }
                             }
+                            responseData.Message = "User already has a wallet";
+                            return responseData;
                         }
-                        responseData.Message = "User already has a wallet";
+                        responseData.Message = "User already has an invite to this wallet";
                         return responseData;
                     }
-                    responseData.Message = "User already has an invite to this wallet";
-                    return responseData;
                 }
+                return responseData;
             }
+            responseData.Message = "The wallet cannot have more than 5 users";
             return responseData;
         }
 
@@ -90,25 +95,31 @@ namespace Wallets_API.Repository
                 isSuccessful = false,
                 Message = "User alread has a wallet",
             };
-
-            var whoIsInvited = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
-            if (whoIsInvited.WalletID == 0)
+            var wallet = await _context.Wallets.Where(w => w.Id == walletId).FirstOrDefaultAsync();
+            if (wallet.UserNumber < 5)
             {
-                var whoInvites = await _context.Invites.Where(i => i.InviteReceiverEmail == whoIsInvited.Email && i.WalletId == walletId).FirstOrDefaultAsync();
-                if (whoInvites != null)
+                var whoIsInvited = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
+                if (whoIsInvited.WalletID == 0)
                 {
-                    whoIsInvited.WalletID = walletId;
-                    whoIsInvited.DateJoined = DateTime.Now;
-                    _context.Users.Update(whoIsInvited);
-                    await _context.SaveChangesAsync();
-                    responseData.isSuccessful = true;
-                    responseData.Message = $"You have joined wallet - {whoInvites.WalletTitle}";
-                    await RemoveInvitesAndRequests(whoIsInvited);
+                    var whoInvites = await _context.Invites.Where(i => i.InviteReceiverEmail == whoIsInvited.Email && i.WalletId == walletId).FirstOrDefaultAsync();
+                    if (whoInvites != null)
+                    {
+                        whoIsInvited.WalletID = walletId;
+                        whoIsInvited.DateJoined = DateTime.Now;
+                        _context.Users.Update(whoIsInvited);
+                        responseData.isSuccessful = true;
+                        responseData.Message = $"You have joined wallet - {whoInvites.WalletTitle}";
+                        await RemoveInvitesAndRequests(whoIsInvited);
+                        wallet.UserNumber++;
+                        await _context.SaveChangesAsync();
+                        return responseData;
+                    }
+                    responseData.Message = "There is no such an invite";
                     return responseData;
                 }
-                responseData.Message = "There is no such an invite";
                 return responseData;
             }
+            responseData.Message = "Wallet has reached the user limit";
             return responseData;
         }
 

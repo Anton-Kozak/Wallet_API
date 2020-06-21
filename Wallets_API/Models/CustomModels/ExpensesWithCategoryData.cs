@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Wallets_API.DBClasses;
+using Wallets_API.DTO;
 
 namespace Wallets_API.Models.CustomModels
 {
@@ -10,6 +11,6 @@ namespace Wallets_API.Models.CustomModels
     {
         public int CategoryId { get; set; }
         public string CategoryName { get; set; }
-        public List<Expense> Expenses { get; set; }
+        public List<ExpenseDTO> Expenses { get; set; }
     }
 }

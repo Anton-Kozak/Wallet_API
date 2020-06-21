@@ -21,7 +21,7 @@ namespace Wallets_API.Repository
         Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId);
         Task<List<ExpenseDTO>> ShowUserExpenses(int walletId, string userId);
         Task<ResponseData> DeleteExpense(string userId, int expenseId);
-        Task<ResponseData> EditExpense(string userId, ExpenseDTO expenseToEdit);
+        Task<Expense> EditExpense(string userId, ExpenseDTO expenseToEdit);
 
         
     }
