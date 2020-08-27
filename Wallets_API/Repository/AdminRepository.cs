@@ -33,7 +33,7 @@ namespace Wallets_API.Repository
                                   {
                                       Id = e.Id,
                                       UserName = u.UserName,
-                                      ExpenseTitle = e.ExpenseName,
+                                      ExpenseTitle = e.ExpenseTitle,
                                       ExpenseDescription = e.ExpenseDescription,
                                       CreationDate = e.CreationDate,
                                       MoneySpent = e.MoneySpent,
@@ -104,7 +104,7 @@ namespace Wallets_API.Repository
 
             if (expToEdit != null)
             {
-                expToEdit.ExpenseName = expenseToEdit.ExpenseName;
+                expToEdit.ExpenseTitle = expenseToEdit.ExpenseTitle;
                 expToEdit.ExpenseDescription = expenseToEdit.ExpenseDescription;
                 expToEdit.MoneySpent = expenseToEdit.MoneySpent;
                 expToEdit.CreationDate = expenseToEdit.CreationDate;

@@ -75,6 +75,20 @@ namespace Wallets_API.Repository
 
         public async Task<IEnumerable<RequestToReturnDTO>> GetRequests(string ownerEmail)
         {
+            var reqsToRemove = await (from r in _context.Requests
+                                      join u in _context.Users on r.RequestCreatorId equals u.Id
+                                      where r.RequestReceiverEmail == ownerEmail
+                                      where u.WalletID != 0
+                                      select new Request
+                                      {
+                                          Id = r.Id,
+                                          RequestCreatorId = r.RequestCreatorId,
+                                          RequestReceiverEmail = r.RequestReceiverEmail,
+                                          InviteCreationTime = r.InviteCreationTime,
+                                          WalletId = r.WalletId
+                                      }).ToListAsync();
+            _context.Requests.RemoveRange(reqsToRemove);
+            await _context.SaveChangesAsync();
             var requests = await (from r in _context.Requests
                                   join u in _context.Users on r.RequestCreatorId equals u.Id
                                   where r.RequestReceiverEmail == ownerEmail
@@ -84,6 +98,19 @@ namespace Wallets_API.Repository
                                       RequestCreatorEmail = u.Email,
                                       InviteCreationTime = r.InviteCreationTime.ToString()
                                   }).ToListAsync();
+            List<int> requestsToRemove = new List<int>();
+            for (int i = 0; i < requests.Count; i++)
+            {
+                var usersWithWallet = await _context.Users.Where(u => u.Email == requests[i].RequestCreatorEmail && u.WalletID != 0).FirstOrDefaultAsync();
+                if (usersWithWallet != null)
+                    requestsToRemove.Add(i);
+            }
+            foreach (int index in requestsToRemove.Reverse<int>())
+            {
+                requests.RemoveAt(index);
+            }
+
+
             return requests;
         }
 
@@ -152,9 +179,13 @@ namespace Wallets_API.Repository
                 if (request != null)
                 {
                     var notificationToDelete = await _context.Notifications.Where(n => n.InitiatorUser == userToDecline.Id && n.TargetUser == walletOwner.Id).FirstOrDefaultAsync();
-                    _context.Notifications.Remove(notificationToDelete);
-                    var notificationUserToDelete = await _context.NotificationsUsers.Where(n => n.NotificationId == notificationToDelete.Id).FirstOrDefaultAsync();
-                    _context.NotificationsUsers.Remove(notificationUserToDelete);
+                    if (notificationToDelete != null)
+                    {
+                        _context.Notifications.Remove(notificationToDelete);
+                        var notificationUserToDelete = await _context.NotificationsUsers.Where(n => n.NotificationId == notificationToDelete.Id).FirstOrDefaultAsync();
+                        if (notificationUserToDelete != null)
+                            _context.NotificationsUsers.Remove(notificationUserToDelete);
+                    }
                     _context.Requests.Remove(request);
                     await _context.SaveChangesAsync();
                     responseData.isSuccessful = true;

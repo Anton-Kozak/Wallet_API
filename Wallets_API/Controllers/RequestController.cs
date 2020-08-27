@@ -27,6 +27,7 @@ namespace Wallets_API.Controllers
         [HttpPost("request/{userToRequestEmail}")]
         public async Task<IActionResult> SendRequest(string userId, string userToRequestEmail)
         {
+            userToRequestEmail += "@mail.com";
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var requester = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -62,6 +63,7 @@ namespace Wallets_API.Controllers
         [HttpPost("acceptRequest/{emailToAccept}")]
         public async Task<IActionResult> AcceptRequestAndGiveAccess(string userId, string emailToAccept)
         {
+            //emailToAccept += "@mail.com";
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -85,6 +87,7 @@ namespace Wallets_API.Controllers
         [HttpPost("decline/{emailToDecline}")]
         public async Task<IActionResult> DeclineRequestToAccess(string userId, string emailToDecline)
         {
+            emailToDecline += "@mail.com";
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var result = await _repository.DeclineRequest(userId, emailToDecline);

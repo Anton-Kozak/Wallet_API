@@ -12,7 +12,7 @@ using Wallets_API.Models.CustomModels;
 
 namespace Wallets_API.Repository
 {
-    
+
     public class ExpenseRepository : IExpenseRepository
     {
         private readonly ApplicationDbContext _context;
@@ -47,10 +47,20 @@ namespace Wallets_API.Repository
             return null;
         }
 
-        public async Task<List<ExpensesWithCategoryData>> ShowCurrentExpenses(int walletId)
+        public async Task<List<ExpensesWithCategoryData>> ShowExpenses(int walletId, int month)
         {
             var today = DateTime.Today;
-            var currentMonth = new DateTime(today.Year, today.Month, 1);
+            var currentMonth = new DateTime();
+            if (month > 0)
+            {
+                var previousDate = today.AddMonths(month * -1);
+                currentMonth = new DateTime(previousDate.Year, previousDate.Month, 1);
+            }
+            else
+            {
+                currentMonth = new DateTime(today.Year, today.Month, 1);
+            }
+
             var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
             List<ExpensesWithCategoryData> expenses = new List<ExpensesWithCategoryData>();
 
@@ -62,23 +72,20 @@ namespace Wallets_API.Repository
                 expGroup.CategoryName = category.Title;
 
                 var catExpenses = await (from e in _context.Expenses
-                                      join u in _context.Users
-                                      on e.ExpenseUserId equals u.Id
-                                      where e.ExpenseCategoryId == category.Id
-                                      where e.FamilyWalletId == walletId
-                                      where e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth
-                                      select new ExpenseDTO
-                                      {
-                                          Id = e.Id,
-                                          UserName = u.UserName,
-                                          ExpenseName = e.ExpenseName,
-                                          ExpenseDescription = e.ExpenseDescription,
-                                          CreationDate = e.CreationDate,
-                                          MoneySpent = e.MoneySpent,
-                                      }).Take(10).ToListAsync();
-
-
-                //var catExpenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == category.Id && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).Take(10).ToListAsync();
+                                         join u in _context.Users
+                                         on e.ExpenseUserId equals u.Id
+                                         where e.ExpenseCategoryId == category.Id
+                                         where e.FamilyWalletId == walletId
+                                         where e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth
+                                         select new ExpenseDTO
+                                         {
+                                             Id = e.Id,
+                                             UserName = u.UserName,
+                                             ExpenseTitle = e.ExpenseTitle,
+                                             ExpenseDescription = e.ExpenseDescription,
+                                             CreationDate = e.CreationDate,
+                                             MoneySpent = e.MoneySpent,
+                                         }).Take(10).ToListAsync();
                 if (catExpenses.Count == 0)
                     expGroup.Expenses = new List<ExpenseDTO>();
                 else
@@ -88,19 +95,6 @@ namespace Wallets_API.Repository
             return expenses;
         }
 
-        public async Task<List<Expense>> ShowPreviousExpenses(int walletId)
-        {
-            var today = DateTime.Today;
-            var currentMonth = new DateTime(today.Year, today.Month, 1);
-            var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
-            List<Expense> listOfExpensesToReturn = new List<Expense>();
-
-            foreach (var category in _context.ExpenseCategories)
-            {
-                listOfExpensesToReturn.AddRange(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseCategoryId == category.Id && e.CreationDate < currentMonth).Take(10).ToListAsync());
-            }
-            return listOfExpensesToReturn;
-        }
 
         public async Task<WalletToReturnDTO> GetWalletData(int walletId)
         {
@@ -135,7 +129,7 @@ namespace Wallets_API.Repository
                                       select new ExpenseDTO
                                       {
                                           UserName = u.UserName,
-                                          ExpenseName = e.ExpenseName,
+                                          ExpenseTitle = e.ExpenseTitle,
                                           ExpenseDescription = e.ExpenseDescription,
                                           CreationDate = e.CreationDate,
                                           MoneySpent = e.MoneySpent
@@ -173,7 +167,7 @@ namespace Wallets_API.Repository
 
             if (expToEdit != null)
             {
-                expToEdit.ExpenseName = expenseToEdit.ExpenseName;
+                expToEdit.ExpenseTitle = expenseToEdit.ExpenseTitle;
                 expToEdit.ExpenseDescription = expenseToEdit.ExpenseDescription;
                 expToEdit.MoneySpent = expenseToEdit.MoneySpent;
                 expToEdit.CreationDate = expenseToEdit.CreationDate;
@@ -647,7 +641,7 @@ namespace Wallets_API.Repository
                                       select new ExpenseDTO
                                       {
                                           Id = e.Id,
-                                          ExpenseName = e.ExpenseName,
+                                          ExpenseTitle = e.ExpenseTitle,
                                           ExpenseDescription = e.ExpenseDescription,
                                           CreationDate = e.CreationDate,
                                           MoneySpent = e.MoneySpent,

@@ -47,6 +47,7 @@ namespace Wallets_API.Controllers
         [HttpPost("invite/{userToInviteEmail}")]
         public async Task<IActionResult> InviteNewUserToWallet(string userId, string userToInviteEmail)
         {
+            userToInviteEmail += "@mail.com";
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var whoInvites = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);

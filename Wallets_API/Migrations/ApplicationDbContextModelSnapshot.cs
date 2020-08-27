@@ -154,7 +154,7 @@ namespace Wallets_API.Migrations
 
                     b.Property<string>("ExpenseDescription");
 
-                    b.Property<string>("ExpenseName");
+                    b.Property<string>("ExpenseTitle");
 
                     b.Property<string>("ExpenseUserId");
 

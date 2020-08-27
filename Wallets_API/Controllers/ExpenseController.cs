@@ -56,7 +56,26 @@ namespace Wallets_API.Controllers
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {
-                    var expenses = await _expenseRepository.ShowCurrentExpenses(user.WalletID);
+                    var expenses = await _expenseRepository.ShowExpenses(user.WalletID, 1);
+                    if (expenses != null)
+                    {
+                        return Ok(expenses);
+                    }
+                }
+                return BadRequest(null);
+            }
+            return Unauthorized();
+        }
+
+        [HttpGet("previousExpenses/{month}")]
+        public async Task<IActionResult> ShowPreviousExpenses(string userId, int month)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null)
+                {
+                    var expenses = await _expenseRepository.ShowExpenses(user.WalletID, month * -1);
                     if (expenses != null)
                     {
                         return Ok(expenses);
@@ -75,54 +94,7 @@ namespace Wallets_API.Controllers
         }
 
 
-        [HttpGet("previousExpenses")]
-        public async Task<IActionResult> ShowPreviousExpenses(string userId)
-        {
-            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
-            {
-                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-                if (user != null)
-                {
-                    var expenses = await _expenseRepository.ShowPreviousExpenses(user.WalletID);
-                    if (expenses != null)
-                    {
-                        ListOfExpensesLists list = new ListOfExpensesLists()
-                        {
-                            food = new List<Expense>(),
-                            entertainment = new List<Expense>(),
-                            housekeeping = new List<Expense>(),
-                            clothes = new List<Expense>(),
-                            other = new List<Expense>(),
-                        };
-                        foreach (var expense in expenses)
-                        {
-                            switch (expense.ExpenseCategoryId)
-                            {
-                                case 1:
-                                    list.food.Add(expense);
-                                    break;
-                                case 2:
-                                    list.housekeeping.Add(expense);
-                                    break;
-                                case 3:
-                                    list.clothes.Add(expense);
-                                    break;
-                                case 4:
-                                    list.entertainment.Add(expense);
-                                    break;
-                                case 5:
-                                    list.other.Add(expense);
-                                    break;
-                            }
-                        }
-                        return Ok(list);
-                    }
-                }
-                return BadRequest(null);
-            }
-            return Unauthorized();
-        }
+        
 
 
 

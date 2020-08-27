@@ -10,8 +10,7 @@ namespace Wallets_API.Repository
 {
     public interface IExpenseRepository
     {
-        Task<List<ExpensesWithCategoryData>> ShowCurrentExpenses(int walletId);
-        Task<List<Expense>> ShowPreviousExpenses(int walletId);
+        Task<List<ExpensesWithCategoryData>> ShowExpenses(int walletId, int month);
         Task<WalletToReturnDTO> GetWalletData(int walletId);
         Task<List<ExpenseDTO>> ShowCategoryExpenses(int walletId, int categoryId);
         Task<Expense> CreateNewExpense(Expense newExpense);
