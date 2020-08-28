@@ -26,14 +26,17 @@ namespace Wallets_API.Repository
             _walletRepo = walletRepo;
         }
 
-        public async Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesData(int walletId)
+        public async Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesData(int walletId, int month)
         {
+            DateTime[] date = GetDate(month);
+            var monthStart = date[0];
+            var monthEnd = date[1];
             //TODO: проверить что будет если везде будет 0
             List<CategoriesAndExpensesDTO> expenses = new List<CategoriesAndExpensesDTO>();
             foreach (var category in _context.WalletsCategories.Where(w => w.WalletId == walletId).AsEnumerable())
             {
                 CategoriesAndExpensesDTO categoriesAndExpenses = new CategoriesAndExpensesDTO();
-                categoriesAndExpenses.CategoryExpenses = _context.Expenses.Where(e => e.ExpenseCategoryId == category.CategoryId && e.FamilyWalletId == walletId).Sum(e => e.MoneySpent);
+                categoriesAndExpenses.CategoryExpenses = await _context.Expenses.Where(e => e.ExpenseCategoryId == category.CategoryId && e.FamilyWalletId == walletId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd).SumAsync(e => e.MoneySpent);
                 expenses.Add(categoriesAndExpenses);
             }
             return expenses;
@@ -47,20 +50,52 @@ namespace Wallets_API.Repository
             return null;
         }
 
-        public async Task<List<ExpensesWithCategoryData>> ShowExpenses(int walletId, int month)
+        public async Task<PreviousExpenses> ShowPreviousExpenses(int walletId, int month)
         {
             var today = DateTime.Today;
-            var currentMonth = new DateTime();
-            if (month > 0)
+            var previousDate = today.AddMonths(month);
+            var currentMonth = new DateTime(previousDate.Year, previousDate.Month, 1);
+            var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
+            var categories = await _walletRepo.GetCategories(walletId);
+            PreviousExpenses previousExpenses = new PreviousExpenses();
+            List<ExpensesWithCategoryData> expenses = new List<ExpensesWithCategoryData>();
+            foreach (var category in categories)
             {
-                var previousDate = today.AddMonths(month * -1);
-                currentMonth = new DateTime(previousDate.Year, previousDate.Month, 1);
-            }
-            else
-            {
-                currentMonth = new DateTime(today.Year, today.Month, 1);
-            }
+                ExpensesWithCategoryData expGroup = new ExpensesWithCategoryData();
+                expGroup.CategoryId = category.Id;
+                expGroup.CategoryName = category.Title;
 
+                var catExpenses = await (from e in _context.Expenses
+                                         join u in _context.Users
+                                         on e.ExpenseUserId equals u.Id
+                                         where e.ExpenseCategoryId == category.Id
+                                         where e.FamilyWalletId == walletId
+                                         where e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth
+                                         select new ExpenseDTO
+                                         {
+                                             Id = e.Id,
+                                             UserName = u.UserName,
+                                             ExpenseTitle = e.ExpenseTitle,
+                                             ExpenseDescription = e.ExpenseDescription,
+                                             CreationDate = e.CreationDate,
+                                             MoneySpent = e.MoneySpent,
+                                         }).Take(10).ToListAsync();
+                if (catExpenses.Count == 0)
+                    expGroup.Expenses = new List<ExpenseDTO>();
+                else
+                    expGroup.Expenses = catExpenses;
+                expenses.Add(expGroup);
+            }
+            previousExpenses.PreviousMonthExpenses = expenses;
+            previousExpenses.TopFiveUsers = await GetTopMembers(walletId, month);
+            previousExpenses.PreviousExpensesBars = await CreateBarExpensesData(walletId, month);
+            return previousExpenses;
+        }
+
+        public async Task<List<ExpensesWithCategoryData>> ShowExpenses(int walletId)
+        {
+            var today = DateTime.Today;
+            var currentMonth = new DateTime(today.Year, today.Month, 1);
             var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
             List<ExpensesWithCategoryData> expenses = new List<ExpensesWithCategoryData>();
 
@@ -200,13 +235,13 @@ namespace Wallets_API.Repository
 
                 //общие показатели по всем категориям за всё время
                 //TODO: потом поменять на данный месяц?
-                data.BarExpenses = await CreateBarExpensesData(walletId);
+                data.BarExpenses = await CreateBarExpensesData(walletId, 0);
 
                 //получить данные предыдущего и текущего месяцев для сравнения по всем категориям всех пользователей данного кошелька
                 data.BarCompareExpensesWithLastMonth = await GetCurrentAndPreviousMonthsData(walletId);
 
                 //данные о 5 пользователях с наибольшим кол-вом трат в кошельке
-                data.TopFiveUsers = await GetTopMembers(walletId);
+                data.TopFiveUsers = await GetTopMembers(walletId, 0);
 
                 data.LastSixMonths = await GetLastSixMonthsOfData(walletId);
 
@@ -224,26 +259,6 @@ namespace Wallets_API.Repository
 
         private async Task<List<LastMonthData>> GetLastSixMonthsOfData(int walletId)
         {
-            //CultureInfo ci = new CultureInfo("en-US");
-            //List<LastMonthData> lastMonths = new List<LastMonthData>();
-            //var today = DateTime.Today;
-            //var currentMonth = new DateTime(today.Year, today.Month, 1);
-            //var monthToRemove = new DateTime(today.Year, today.Month, 1);
-            //DateTime startOfPreviousMonth;
-            //DateTime endOfPreviousMonth;
-            //for (int i = -1; i > -6; i--)
-            //{
-            //    startOfPreviousMonth = currentMonth.AddMonths(i);
-            //    endOfPreviousMonth = monthToRemove.AddMilliseconds(-1);
-            //    monthToRemove = monthToRemove.AddMonths(-1);
-
-            //    lastMonths.Add(new LastMonthData
-            //    {
-            //        Month = DateTime.Now.AddMonths(i).ToString("MMMM", ci),
-            //        ExpenseSum = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= startOfPreviousMonth && e.CreationDate <= endOfPreviousMonth).SumAsync(e => e.MoneySpent),
-            //    });
-            //}
-            //return lastMonths;
             CultureInfo ci = new CultureInfo("en-US");
             List<LastMonthData> lastMonths = new List<LastMonthData>();
             var today = DateTime.Today;
@@ -271,12 +286,15 @@ namespace Wallets_API.Repository
             return lastMonths;
         }
 
-        private async Task<List<UserStatistics>> GetTopMembers(int walletId)
+        private async Task<List<UserStatistics>> GetTopMembers(int walletId, int month)
         {
-
+            DateTime[] date = GetDate(month);
+            var monthStart = date[0];
+            var monthEnd = date[1];
             var topFiveMembers = await (from e in _context.Expenses
                                         join u in _context.Users on e.ExpenseUserId equals u.Id
                                         where e.FamilyWalletId == walletId
+                                        where e.CreationDate >= monthStart && e.CreationDate <= monthEnd
                                         group e by u.UserName into g
                                         select new UserStatistics
                                         {
@@ -650,6 +668,16 @@ namespace Wallets_API.Repository
                 return expenses;
             }
             return null;
+        }
+
+        private DateTime[] GetDate(int month)
+        {
+            DateTime[] date = new DateTime[2];
+            var today = DateTime.Today;
+            var previousDate = today.AddMonths(month);
+            date[0] = new DateTime(previousDate.Year, previousDate.Month, 1);
+            date[1] = date[0].AddMonths(1).AddMilliseconds(-1);
+            return date;
         }
 
 

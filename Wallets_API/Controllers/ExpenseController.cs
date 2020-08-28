@@ -56,7 +56,7 @@ namespace Wallets_API.Controllers
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {
-                    var expenses = await _expenseRepository.ShowExpenses(user.WalletID, 1);
+                    var expenses = await _expenseRepository.ShowExpenses(user.WalletID);
                     if (expenses != null)
                     {
                         return Ok(expenses);
@@ -75,7 +75,7 @@ namespace Wallets_API.Controllers
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {
-                    var expenses = await _expenseRepository.ShowExpenses(user.WalletID, month * -1);
+                    var expenses = await _expenseRepository.ShowPreviousExpenses(user.WalletID, month * -1);
                     if (expenses != null)
                     {
                         return Ok(expenses);
@@ -230,15 +230,15 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpGet("barExpenses")]
-        public async Task<IActionResult> ShowBarExpensesData(string userId)
+        [HttpGet("barExpenses/{month}")]
+        public async Task<IActionResult> ShowBarExpensesData(string userId, int month)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID != 0)
                 {
-                    var result = await _expenseRepository.CreateBarExpensesData(user.WalletID);
+                    var result = await _expenseRepository.CreateBarExpensesData(user.WalletID, month * -1);
                     return Ok(result);
                 }
                 return BadRequest();
