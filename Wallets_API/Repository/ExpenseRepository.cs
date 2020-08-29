@@ -537,14 +537,18 @@ namespace Wallets_API.Repository
         {
 
             DetailedUserStatisticsDTO data = new DetailedUserStatisticsDTO();
+            DateTime[] date = GetDate(0);
+            var monthStart = date[0];
+            var monthEnd = date[1];
             int categoryIdForSum, categoryIdForUsage;
             double largestExpense;
-            GetUserTopCategories(walletId, userId, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
+            GetUserTopCategories(walletId, userId, date, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
             if (largestExpense > 0)
             {
+                
                 data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
                 data.MostUsedCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
-                var avgExp = _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId);
+                var avgExp = _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd);
                 if (avgExp.Count() != 0)
                     data.AverageDailyExpense = Math.Round(await avgExp.AverageAsync(e => e.MoneySpent), 2);
                 else
@@ -555,15 +559,17 @@ namespace Wallets_API.Repository
 
                 data.LastSixMonths = await GetLastSixMonthsOfDataForUser(walletId, userId);
 
-                data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId).SumAsync(s => s.MoneySpent);
+                data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd).SumAsync(s => s.MoneySpent);
             }
             return data;
 
         }
 
-        private void GetUserTopCategories(int walletId, string userId, out int categoryIdForSum, out int categoryIdForUsage, out double largestExpense)
+        private void GetUserTopCategories(int walletId, string userId, DateTime[] date, out int categoryIdForSum, out int categoryIdForUsage, out double largestExpense)
         {
-            var sumForCategory = _context.Expenses.Where(e => e.FamilyWalletId == walletId).GroupBy(e => e.ExpenseCategoryId).Select(res => new Statistics
+            var monthStart = date[0];
+            var monthEnd = date[1];
+            var sumForCategory = _context.Expenses.Where(e => e.FamilyWalletId == walletId  && e.CreationDate >= monthStart && e.CreationDate <= monthEnd && e.ExpenseUserId == userId).GroupBy(e => e.ExpenseCategoryId).Select(res => new Statistics
             {
                 Sum = res.Sum(s => s.MoneySpent),
                 Usage = res.Count(),
@@ -586,12 +592,14 @@ namespace Wallets_API.Repository
 
         private async Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesDataForUser(int walletId, string userId)
         {
-
+            DateTime[] date = GetDate(0);
+            var monthStart = date[0];
+            var monthEnd = date[1];
             List<CategoriesAndExpensesDTO> expenses = new List<CategoriesAndExpensesDTO>();
             foreach (var category in _context.WalletsCategories.Where(w => w.WalletId == walletId).AsEnumerable())
             {
                 CategoriesAndExpensesDTO categoriesAndExpenses = new CategoriesAndExpensesDTO();
-                categoriesAndExpenses.CategoryExpenses = _context.Expenses.Where(e => e.ExpenseCategoryId == category.CategoryId && e.FamilyWalletId == walletId && e.ExpenseUserId == userId).Sum(e => e.MoneySpent);
+                categoriesAndExpenses.CategoryExpenses = _context.Expenses.Where(e => e.ExpenseCategoryId == category.CategoryId && e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd).Sum(e => e.MoneySpent);
                 expenses.Add(categoriesAndExpenses);
             }
 
