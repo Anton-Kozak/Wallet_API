@@ -13,7 +13,7 @@ namespace Wallets_API.Repository
         Task<List<ExpensesWithCategoryData>> ShowExpenses(int walletId);
         Task<PreviousExpenses> ShowPreviousExpenses(int walletId, int month);
         Task<WalletToReturnDTO> GetWalletData(int walletId);
-        Task<List<ExpenseDTO>> ShowCategoryExpenses(int walletId, int categoryId);
+        Task<List<ExpenseDTO>> ShowCategoryExpenses(int walletId, int categoryId, DateTime[] date);
         Task<Expense> CreateNewExpense(Expense newExpense);
         Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesData(int walletId, int month);
         Task<DetailedWalletStatisticsDTO> DetailedWalletStatistics(int walletId);

@@ -117,30 +117,30 @@ namespace Wallets_API.Controllers
         }
 
 
-        [HttpGet("getCategoryExpenses/{categoryId}")]
-        public async Task<IActionResult> GetCategoryExpenses(string userId, int categoryId)
-        {
-            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
-            {
-                if (categoryId != 0)
-                {
-                    var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-                    if (user != null)
-                    {
-                        var result = await _expenseRepository.ShowCategoryExpenses(user.WalletID, categoryId);
-                        if (result != null)
-                        {
-                            return Ok(result);
-                        }
-                    }
-                    return BadRequest("User has not been found");
-                }
-                return BadRequest("There is no category");
+        //[HttpGet("getCategoryExpenses/{categoryId}")]
+        //public async Task<IActionResult> GetCategoryExpenses(string userId, int categoryId)
+        //{
+        //    if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+        //    {
+        //        if (categoryId != 0)
+        //        {
+        //            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        //            if (user != null)
+        //            {
+        //                var result = await _expenseRepository.ShowCategoryExpenses(user.WalletID, categoryId);
+        //                if (result != null)
+        //                {
+        //                    return Ok(result);
+        //                }
+        //            }
+        //            return BadRequest("User has not been found");
+        //        }
+        //        return BadRequest("There is no category");
 
-            }
+        //    }
 
-            return Unauthorized();
-        }
+        //    return Unauthorized();
+        //}
 
         [HttpPost("new")]
         public async Task<IActionResult> CreateExpense(string userId, Expense newExpense)
