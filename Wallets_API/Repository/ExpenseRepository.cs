@@ -225,12 +225,16 @@ namespace Wallets_API.Repository
             GetWalletTopCategories(walletId, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
             if (largestExpense > 0)
             {
+                DateTime[] date = GetDate(0);
+                var monthStart = date[0];
+                var monthEnd = date[1];
+
                 data.hasExpenseData = true;
                 data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
                 data.MostUsedCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
 
                 //средние показатели расходов
-                data.AverageDailyExpense = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId).AverageAsync(e => e.MoneySpent), 2);
+                data.AverageDailyExpense = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd).AverageAsync(e => e.MoneySpent), 2);
 
 
                 //общие показатели по всем категориям за всё время
@@ -245,10 +249,7 @@ namespace Wallets_API.Repository
 
                 data.LastSixMonths = await GetLastSixMonthsOfData(walletId);
 
-
-
-
-                data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId).SumAsync(s => s.MoneySpent);
+                data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd).SumAsync(s => s.MoneySpent);
             }
             //wallet members
             var users = await _context.Users.Where(u => u.WalletID == walletId).ToListAsync();
@@ -348,7 +349,10 @@ namespace Wallets_API.Repository
 
         private void GetWalletTopCategories(int walletId, out int categoryIdForSum, out int categoryIdForUsage, out double largestExpense)
         {
-            var sumForCategory = _context.Expenses.Where(e => e.FamilyWalletId == walletId).GroupBy(e => e.ExpenseCategoryId).Select(res => new Statistics
+            DateTime[] date = GetDate(0);
+            var monthStart = date[0];
+            var monthEnd = date[1];
+            var sumForCategory = _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd).GroupBy(e => e.ExpenseCategoryId).Select(res => new Statistics
             {
                 Sum = res.Sum(s => s.MoneySpent),
                 Usage = res.Count(),
