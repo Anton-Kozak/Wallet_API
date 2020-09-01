@@ -553,6 +553,7 @@ namespace Wallets_API.Repository
             GetUserTopCategories(walletId, userId, date, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
             if (largestExpense > 0)
             {
+                data.LargestExpense = largestExpense;
                 data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
                 data.MostUsedCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
                 var avgExp = _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd);
