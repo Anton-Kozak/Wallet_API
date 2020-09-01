@@ -18,8 +18,8 @@ namespace Wallets_API.Repository
         Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesData(int walletId, int month);
         Task<DetailedWalletStatisticsDTO> DetailedWalletStatistics(int walletId);
         Task<DetailedCategoryStatisticsDTO> DetailedCategoryStatistics(int walletId, int categoryId, string userId);
-        Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId);
-        Task<List<ExpenseDTO>> ShowUserExpenses(int walletId, string userId);
+        Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId, int month);
+        Task<List<ExpenseDTO>> ShowUserExpenses(int walletId, string userId, int month);
         Task<ResponseData> DeleteExpense(string userId, int expenseId);
         Task<Expense> EditExpense(string userId, ExpenseDTO expenseToEdit);
 

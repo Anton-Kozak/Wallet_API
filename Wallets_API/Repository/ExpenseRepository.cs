@@ -542,11 +542,10 @@ namespace Wallets_API.Repository
 
         //----------------------------------------------user statistics----------------------------------------------------------------
 
-        public async Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId)
+        public async Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId, int month)
         {
-
             DetailedUserStatisticsDTO data = new DetailedUserStatisticsDTO();
-            DateTime[] date = GetDate(0);
+            DateTime[] date = GetDate(month);
             var monthStart = date[0];
             var monthEnd = date[1];
             int categoryIdForSum, categoryIdForUsage;
@@ -562,11 +561,6 @@ namespace Wallets_API.Repository
                 else
                     data.AverageDailyExpense = 0;
                 data.BarExpenses = await CreateBarExpensesDataForUser(walletId, userId, date);
-
-                data.BarCompareExpensesWithLastMonth = await GetCurrentAndPreviousMonthsDataForUser(walletId, userId);
-
-                data.LastSixMonths = await GetLastSixMonthsOfDataForUser(walletId, userId);
-
                 data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd).SumAsync(s => s.MoneySpent);
             }
             return data;
@@ -665,11 +659,11 @@ namespace Wallets_API.Repository
         }
 
 
-        public async Task<List<ExpenseDTO>> ShowUserExpenses(int walletId, string userId)
+        public async Task<List<ExpenseDTO>> ShowUserExpenses(int walletId, string userId, int month)
         {
             if (walletId != 0 && userId != null)
             {
-                DateTime[] date = GetDate(0);
+                DateTime[] date = GetDate(month);
                 var monthStart = date[0];
                 var monthEnd = date[1];
                 var expenses = await (from e in _context.Expenses

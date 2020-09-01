@@ -279,8 +279,8 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpGet("detailedUserStatistics/{userToShowId}")]
-        public async Task<IActionResult> GetDetailedUserStatistics(string userId, string userToShowId)
+        [HttpGet("detailedUserStatistics/{userToShowId}/{month}")]
+        public async Task<IActionResult> GetDetailedUserStatistics(string userId, string userToShowId, int month)
         {
             //if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
@@ -288,7 +288,7 @@ namespace Wallets_API.Controllers
                 var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID != 0 && user.WalletID == currentUser.WalletID)
                 {
-                    var result = await _expenseRepository.DetailedUserStatistics(user.WalletID, userToShowId);
+                    var result = await _expenseRepository.DetailedUserStatistics(user.WalletID, userToShowId, month);
                     if (result != null)
                     {
                         return Ok(result);
@@ -300,15 +300,15 @@ namespace Wallets_API.Controllers
             //return Unauthorized();
         }
 
-        [HttpGet("getUserExpenses/{userToDisplayId}")]
-        public async Task<IActionResult> GetUserExpenses(string userId, string userToDisplayId)
+        [HttpGet("getUserExpenses/{userToDisplayId}/{month}")]
+        public async Task<IActionResult> GetUserExpenses(string userId, string userToDisplayId, int month)
         {
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userToDisplayId);
                 var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID == currentUser.WalletID)
                 {
-                    var result = await _expenseRepository.ShowUserExpenses(user.WalletID, userToDisplayId);
+                    var result = await _expenseRepository.ShowUserExpenses(user.WalletID, userToDisplayId, month);
                     if (result != null)
                     {
                         return Ok(result);
