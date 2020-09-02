@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -57,6 +58,25 @@ namespace Wallets_API.Controllers
                 if (user != null)
                 {
                     var expenses = await _expenseRepository.ShowExpenses(user.WalletID);
+                    if (expenses != null)
+                    {
+                        return Ok(expenses);
+                    }
+                }
+                return BadRequest(null);
+            }
+            return Unauthorized();
+        }
+
+        [HttpGet("dailyExpenses/{date}")]
+        public async Task<IActionResult> ShowDailyExpenses(string userId, DateTime date)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null)
+                {
+                    var expenses = await _expenseRepository.ShowDailyExpenses(user.WalletID, date);
                     if (expenses != null)
                     {
                         return Ok(expenses);

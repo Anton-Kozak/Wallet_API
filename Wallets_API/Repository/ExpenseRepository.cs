@@ -130,6 +130,32 @@ namespace Wallets_API.Repository
             return expenses;
         }
 
+        public async Task<List<ExpenseDTO>> ShowDailyExpenses(int walletId, DateTime date)
+        {
+            var currentDay = date.Date;
+            var endOfCurrentDay = date.Date.AddDays(1).AddTicks(-1);
+            var expenses = await (from e in _context.Expenses
+                                  join u in _context.Users
+                                  on e.ExpenseUserId equals u.Id
+                                  join c in _context.ExpenseCategories
+                                  on e.ExpenseCategoryId equals c.Id
+                                  where e.FamilyWalletId == walletId 
+                                  && e.CreationDate >= currentDay
+                                  && e.CreationDate <= endOfCurrentDay
+                                  select new ExpenseDTO
+                                  {
+                                      Id = e.Id,
+                                      UserName = u.UserName,
+                                      ExpenseTitle = e.ExpenseTitle,
+                                      ExpenseDescription = e.ExpenseDescription,
+                                      CreationDate = e.CreationDate,
+                                      MoneySpent = e.MoneySpent,
+                                      ExpenseCategory = c.Title
+                                  }).ToListAsync();
+            var reversedExpenses = expenses.Reverse<ExpenseDTO>().ToList();
+            return reversedExpenses;
+        }
+
 
         public async Task<WalletToReturnDTO> GetWalletData(int walletId)
         {
@@ -402,7 +428,7 @@ namespace Wallets_API.Repository
             data.SpentThisMonth = await GetCurrentMonthExpenses(walletId, categoryId, userId, date);
             data.SpentAll = await _context.Expenses.Where(e => e.FamilyWalletId == walletId
                                                         && e.ExpenseCategoryId == categoryId
-                                                        && e.ExpenseUserId == userId 
+                                                        && e.ExpenseUserId == userId
                                                         && e.CreationDate >= monthStart
                                                         && e.CreationDate <= monthEnd).SumAsync(e => e.MoneySpent);
 
