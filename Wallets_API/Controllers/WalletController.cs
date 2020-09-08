@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Wallets_API.DBClasses;
@@ -132,5 +131,44 @@ namespace Wallets_API.Controllers
             }
             return Unauthorized();
         }
+
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (currentUser != null && currentUser.WalletID != 0)
+                {
+                    ProfileDTO profile = new ProfileDTO();
+                    profile.EditUser = _mapper.Map<UserForProfileEditDTO>(currentUser);
+                    var profileDTO = await _repo.GetProfileInfo(profile, currentUser);
+                    return Ok(profileDTO);
+                }
+                return BadRequest(null);
+            }
+            return Unauthorized();
+        }
+
+        [HttpPost("updateProfile")]
+        public async Task<IActionResult> UpdateProfile(string userId, UserForProfileEditDTO editUser)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (currentUser != null && currentUser.WalletID != 0)
+                {
+                    var results = await _repo.UpdateProfile(currentUser, editUser);
+                    if (results.isSuccessful)
+                    {
+                        return Ok(results.Message);
+                    }
+                    return BadRequest(results.Message);
+                }
+                return BadRequest(null);
+            }
+            return Unauthorized();
+        }
+
     }
 }

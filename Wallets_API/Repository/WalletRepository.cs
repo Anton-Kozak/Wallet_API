@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,12 @@ namespace Wallets_API.Repository
     public class WalletRepository : IWalletRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public WalletRepository(ApplicationDbContext context)
+        public WalletRepository(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
 
@@ -94,7 +97,7 @@ namespace Wallets_API.Repository
         {
             foreach (var categoryId in categories)
             {
-                if (!await _context.WalletsCategories.Where(wc => wc.CategoryId == categoryId && wc.WalletId == walletId).AnyAsync() && await _context.ExpenseCategories.Where(ec=> ec.Id == categoryId).AnyAsync())
+                if (!await _context.WalletsCategories.Where(wc => wc.CategoryId == categoryId && wc.WalletId == walletId).AnyAsync() && await _context.ExpenseCategories.Where(ec => ec.Id == categoryId).AnyAsync())
                 {
                     WalletsCategories newCategory = new WalletsCategories
                     {
@@ -120,6 +123,46 @@ namespace Wallets_API.Repository
                                  Title = c.Title
                              }).ToListAsync();
             return cat;
+        }
+
+        public async Task<ProfileDTO> GetProfileInfo(ProfileDTO profile, ApplicationUser user)
+        {
+            profile.MoneySpent = await _context.Expenses.Where(e => e.ExpenseUserId == user.Id).SumAsync(s => s.MoneySpent);
+            var users = await _context.Users.Where(u => u.WalletID == user.WalletID && u.Id != user.Id).ToListAsync();
+            profile.WalletUsers = new List<WalletUsersForProfileDTO>();
+            foreach (var applicationUser in users)
+            {
+                WalletUsersForProfileDTO usersForProfile = new WalletUsersForProfileDTO
+                {
+                    UserId = applicationUser.Id,
+                    Username = applicationUser.UserName,
+                    PhotoUrl = await _context.Photos.Where(p => p.Id == applicationUser.UserPhotoId).Select(p => p.Url).FirstOrDefaultAsync()
+                };
+                profile.WalletUsers.Add(usersForProfile);
+            }
+            return profile;
+        }
+
+        public async Task<ResponseData> UpdateProfile(ApplicationUser currentUser, UserForProfileEditDTO editUser)
+        {
+            ResponseData responseData = new ResponseData
+            {
+                isSuccessful = false,
+                Message = "Error updating profile",
+            };
+            currentUser.Address = editUser.Address;
+            currentUser.Company = editUser.Company;
+            currentUser.FirstName = editUser.FirstName;
+            currentUser.LastName = editUser.LastName;
+            currentUser.PhoneNumber = editUser.PhoneNumber;
+            currentUser.City = editUser.City;
+            currentUser.Country = editUser.Country;
+            currentUser.UserName = editUser.UserName;
+            currentUser.Email = editUser.Email;
+            await _context.SaveChangesAsync();
+            responseData.isSuccessful = true;
+            responseData.Message = "Successfuly updated profile!";
+            return responseData;
         }
     }
 }

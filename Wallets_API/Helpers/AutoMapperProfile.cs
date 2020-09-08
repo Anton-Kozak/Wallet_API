@@ -19,6 +19,8 @@ namespace Wallets_API.Helpers
             CreateMap<UserToReturnToAdmin, UserToReturnToAdminDTO>();
             CreateMap<Wallet, WalletToReturnDTO>();
             CreateMap<Expense, ExpenseDTO>();
+            CreateMap<ApplicationUser, UserForProfileEditDTO>();
+            CreateMap<UserForProfileEditDTO, ApplicationUser>();
         }
     }
 }

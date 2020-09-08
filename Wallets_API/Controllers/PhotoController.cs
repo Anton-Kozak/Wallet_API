@@ -46,7 +46,7 @@ namespace Wallets_API.Controllers
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value != userId)
                 return Unauthorized();
-
+            var photoDeleteResult = PhotoDelete(userId);
             var file = photoForCreationDto.File;
 
             var uploadResult = new ImageUploadResult();
@@ -101,6 +101,15 @@ namespace Wallets_API.Controllers
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value != userId)
                 return Unauthorized();
 
+            var photoDeleteResult = PhotoDelete(userId);
+            if (await photoDeleteResult)
+                return Ok();
+            else
+                return BadRequest("Failed to delete the photo");
+        }
+
+        private async Task<bool> PhotoDelete(string userId)
+        {
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             var photo = await _context.Photos.Where(p => p.Id == user.UserPhotoId).FirstOrDefaultAsync();
@@ -117,11 +126,9 @@ namespace Wallets_API.Controllers
                     user.UserPhotoId = 0;
                     await _context.SaveChangesAsync();
                 }
-                return Ok();
+                return true;
             }
-
-
-            return BadRequest("Failed to delete the photo");
+            return false;
         }
     }
 }

@@ -15,5 +15,7 @@ namespace Wallets_API.Repository
         //walletId + list of category IDs
         Task<bool> AddCategoriesToWallet(int walletId, int[] catgories);
         Task<List<WalletCategoriesToReturnDTO>> GetCategories(int walletId);
+        Task<ProfileDTO> GetProfileInfo(ProfileDTO profile, ApplicationUser user);
+        Task<ResponseData> UpdateProfile(ApplicationUser currentUser, UserForProfileEditDTO editUser);
     }
 }
