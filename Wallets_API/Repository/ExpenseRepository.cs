@@ -26,9 +26,9 @@ namespace Wallets_API.Repository
             _walletRepo = walletRepo;
         }
 
-        public async Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesData(int walletId, int month)
+        public async Task<List<CategoriesAndExpensesDTO>> CreateBarExpensesData(int walletId, DateTime d)
         {
-            DateTime[] date = GetDate(month);
+            DateTime[] date = GetDate(d);
             var monthStart = date[0];
             var monthEnd = date[1];
             //TODO: проверить что будет если везде будет 0
@@ -50,12 +50,13 @@ namespace Wallets_API.Repository
             return null;
         }
 
-        public async Task<PreviousExpenses> ShowPreviousExpenses(int walletId, int month)
+        public async Task<PreviousExpenses> ShowPreviousExpenses(int walletId, DateTime d)
         {
-            var today = DateTime.Today;
-            var previousDate = today.AddMonths(month);
-            var currentMonth = new DateTime(previousDate.Year, previousDate.Month, 1);
-            var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
+            DateTime[] date = GetDate(d);
+            var currentMonth = date[0];
+            var endOfCurrentMonth = date[1];
+            //var currentMonth = new DateTime(date.Year, date.Month, 1);
+            //var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
             var categories = await _walletRepo.GetCategories(walletId);
             PreviousExpenses previousExpenses = new PreviousExpenses();
             List<ExpensesWithCategoryData> expenses = new List<ExpensesWithCategoryData>();
@@ -87,8 +88,8 @@ namespace Wallets_API.Repository
                 expenses.Add(expGroup);
             }
             previousExpenses.PreviousMonthExpenses = expenses;
-            previousExpenses.TopFiveUsers = await GetTopMembers(walletId, month);
-            previousExpenses.PreviousExpensesBars = await CreateBarExpensesData(walletId, month);
+            previousExpenses.TopFiveUsers = await GetTopMembers(walletId, currentMonth, endOfCurrentMonth);
+            previousExpenses.PreviousExpensesBars = await CreateBarExpensesData(walletId, d);
             return previousExpenses;
         }
 
@@ -139,7 +140,7 @@ namespace Wallets_API.Repository
                                   on e.ExpenseUserId equals u.Id
                                   join c in _context.ExpenseCategories
                                   on e.ExpenseCategoryId equals c.Id
-                                  where e.FamilyWalletId == walletId 
+                                  where e.FamilyWalletId == walletId
                                   && e.CreationDate >= currentDay
                                   && e.CreationDate <= endOfCurrentDay
                                   select new ExpenseDTO
@@ -243,17 +244,17 @@ namespace Wallets_API.Repository
 
         //-----------------------------------------------wallet statistics-------------------------------------------------------------
 
-        public async Task<DetailedWalletStatisticsDTO> DetailedWalletStatistics(int walletId)
+        public async Task<DetailedWalletStatisticsDTO> DetailedWalletStatistics(int walletId, DateTime d)
         {
             DetailedWalletStatisticsDTO data = new DetailedWalletStatisticsDTO();
             data.hasExpenseData = false;
             //получить категории в которых больше трат и использований
             int categoryIdForSum, categoryIdForUsage;
             double largestExpense;
-            GetWalletTopCategories(walletId, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
+            GetWalletTopCategories(walletId, d, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
             if (largestExpense > 0)
             {
-                DateTime[] date = GetDate(0);
+                DateTime[] date = GetDate(d);
                 var monthStart = date[0];
                 var monthEnd = date[1];
 
@@ -267,13 +268,13 @@ namespace Wallets_API.Repository
 
                 //общие показатели по всем категориям за всё время
                 //TODO: потом поменять на данный месяц?
-                data.BarExpenses = await CreateBarExpensesData(walletId, 0);
+                data.BarExpenses = await CreateBarExpensesData(walletId, d);
 
                 //получить данные предыдущего и текущего месяцев для сравнения по всем категориям всех пользователей данного кошелька
                 data.BarCompareExpensesWithLastMonth = await GetCurrentAndPreviousMonthsData(walletId);
 
                 //данные о 5 пользователях с наибольшим кол-вом трат в кошельке
-                data.TopFiveUsers = await GetTopMembers(walletId, 0);
+                data.TopFiveUsers = await GetTopMembers(walletId, monthStart, monthEnd);
 
                 data.LastSixMonths = await GetLastSixMonthsOfData(walletId);
 
@@ -315,11 +316,10 @@ namespace Wallets_API.Repository
             return lastMonths;
         }
 
-        private async Task<List<UserStatistics>> GetTopMembers(int walletId, int month)
+        private async Task<List<UserStatistics>> GetTopMembers(int walletId, DateTime start, DateTime end)
         {
-            DateTime[] date = GetDate(month);
-            var monthStart = date[0];
-            var monthEnd = date[1];
+            var monthStart = start;
+            var monthEnd = end;
             var topFiveMembers = await (from e in _context.Expenses
                                         join u in _context.Users on e.ExpenseUserId equals u.Id
                                         where e.FamilyWalletId == walletId
@@ -375,9 +375,9 @@ namespace Wallets_API.Repository
             return barComparison;
         }
 
-        private void GetWalletTopCategories(int walletId, out int categoryIdForSum, out int categoryIdForUsage, out double largestExpense)
+        private void GetWalletTopCategories(int walletId, DateTime d, out int categoryIdForSum, out int categoryIdForUsage, out double largestExpense)
         {
-            DateTime[] date = GetDate(0);
+            DateTime[] date = GetDate(d);
             var monthStart = date[0];
             var monthEnd = date[1];
             var sumForCategory = _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd).GroupBy(e => e.ExpenseCategoryId).Select(res => new Statistics
@@ -401,14 +401,67 @@ namespace Wallets_API.Repository
             }
         }
 
+        public async Task<SpecifiedMonthsData> ShowSpecifiedMonthsData(int walletId, DateTime firstMonth, DateTime secondMonth)
+        {
+            DateTime[] firstDate = GetDate(firstMonth);
+            DateTime[] secondDate = GetDate(secondMonth);
+            SpecifiedMonthsData data = new SpecifiedMonthsData();
+            //FIRST MONTH
+            data.FirstMonthTopFiveUsers = await GetTopMembers(walletId, firstDate[0], firstDate[1]);
+            int firstCategoryIdForSum, firstCategoryIdForUsage;
+            double firstLargestExpense;
+            GetWalletTopCategories(walletId, firstMonth, out firstCategoryIdForSum, out firstCategoryIdForUsage, out firstLargestExpense);
+            data.FirstMonthAverage = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= firstDate[0] && e.CreationDate <= firstDate[1]).AverageAsync(e => e.MoneySpent), 2);
+            data.FirstMonthMostSpent = await _context.ExpenseCategories.Where(e => e.Id == firstCategoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
+            data.FirstMonthMostUsed = await _context.ExpenseCategories.Where(e => e.Id == firstCategoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
+            data.FirstMonthTotal = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= firstDate[0] && e.CreationDate <= firstDate[1]).SumAsync(s => s.MoneySpent);
+            data.FirstMonthPreviousExpensesBars = await CreateBarExpensesData(walletId, firstMonth);
+            data.FirstLargestExpense = firstLargestExpense;
+            data.FirstMonthExpenses = await GetExpensesForSpecifiedMonthComparison(firstMonth, walletId);
+
+            //SECOND MONTH
+            data.SecondMonthTopFiveUsers = await GetTopMembers(walletId, secondDate[0], secondDate[1]);
+            int secondCategoryIdForSum, secondCategoryIdForUsage;
+            double secondLargestExpense;
+            GetWalletTopCategories(walletId, secondMonth, out secondCategoryIdForSum, out secondCategoryIdForUsage, out secondLargestExpense);
+            data.SecondMonthAverage = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= secondDate[0] && e.CreationDate <= secondDate[1]).AverageAsync(e => e.MoneySpent), 2);
+            data.SecondMonthMostSpent = await _context.ExpenseCategories.Where(e => e.Id == secondCategoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
+            data.SecondMonthMostUsed = await _context.ExpenseCategories.Where(e => e.Id == secondCategoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
+            data.SecondMonthTotal = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= secondDate[0] && e.CreationDate <= secondDate[1]).SumAsync(s => s.MoneySpent);
+            data.SecondMonthPreviousExpensesBars = await CreateBarExpensesData(walletId, secondMonth);
+            data.SecondLargestExpense = secondLargestExpense;
+            data.SecondMonthExpenses = await GetExpensesForSpecifiedMonthComparison(secondMonth, walletId);
+            return data;
+        }
+
+        private async Task<List<ExpenseDTO>> GetExpensesForSpecifiedMonthComparison(DateTime selectedDay, int walletId)
+        {
+            var expenses = await (from e in _context.Expenses
+                                  join u in _context.Users
+                                  on e.ExpenseUserId equals u.Id
+                                  join c in _context.ExpenseCategories
+                                  on e.ExpenseCategoryId equals c.Id
+                                  where e.FamilyWalletId == walletId && e.CreationDate >= selectedDay.Date && e.CreationDate <= selectedDay.Date.AddDays(1).AddTicks(-1)
+                                  select new ExpenseDTO
+                                  {
+                                      Id = e.Id,
+                                      ExpenseTitle = e.ExpenseTitle,
+                                      CreationDate = e.CreationDate,
+                                      MoneySpent = e.MoneySpent,
+                                      ExpenseCategory = c.Title,
+                                      UserName = u.UserName
+                                  }).ToListAsync();
+            return expenses;
+
+        }
 
         //-----------------------------------------------category statistics-------------------------------------------------------------
 
 
-        public async Task<DetailedCategoryStatisticsDTO> DetailedCategoryStatistics(int walletId, int categoryId, string userId)
+        public async Task<DetailedCategoryStatisticsDTO> DetailedCategoryStatistics(int walletId, int categoryId, string userId, DateTime d)
         {
             DetailedCategoryStatisticsDTO data = new DetailedCategoryStatisticsDTO();
-            DateTime[] date = GetDate(0);
+            DateTime[] date = GetDate(d);
             var monthStart = date[0];
             var monthEnd = date[1];
             //TODO: подумать о том, чтобы объеденить методы для пользователя и категории в одни и те же, просто сделать if для запроса с катгорией и без для запроса к пользователю
@@ -568,10 +621,11 @@ namespace Wallets_API.Repository
 
         //----------------------------------------------user statistics----------------------------------------------------------------
 
-        public async Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId, int month)
+        public async Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId, DateTime d)
         {
             DetailedUserStatisticsDTO data = new DetailedUserStatisticsDTO();
-            DateTime[] date = GetDate(month);
+            //DateTime modifiedDate = d.AddMonths(1);
+            DateTime[] date = GetDate(d);
             var monthStart = date[0];
             var monthEnd = date[1];
             int categoryIdForSum, categoryIdForUsage;
@@ -686,11 +740,11 @@ namespace Wallets_API.Repository
         }
 
 
-        public async Task<List<ExpenseDTO>> ShowUserExpenses(int walletId, string userId, int month)
+        public async Task<List<ExpenseDTO>> ShowUserExpenses(int walletId, string userId, DateTime d)
         {
             if (walletId != 0 && userId != null)
             {
-                DateTime[] date = GetDate(month);
+                DateTime[] date = GetDate(d);
                 var monthStart = date[0];
                 var monthEnd = date[1];
                 var expenses = await (from e in _context.Expenses
@@ -713,16 +767,24 @@ namespace Wallets_API.Repository
             return null;
         }
 
-        private DateTime[] GetDate(int month)
+        //private DateTime[] GetDate(int month)
+        //{
+        //    DateTime[] date = new DateTime[2];
+        //    var today = DateTime.Today;
+        //    var previousDate = today.AddMonths(month);
+        //    date[0] = new DateTime(previousDate.Year, previousDate.Month, 1);
+        //    date[1] = date[0].AddMonths(1).AddMilliseconds(-1);
+        //    return date;
+        //}
+
+
+        private DateTime[] GetDate(DateTime d)
         {
             DateTime[] date = new DateTime[2];
-            var today = DateTime.Today;
-            var previousDate = today.AddMonths(month);
-            date[0] = new DateTime(previousDate.Year, previousDate.Month, 1);
+            date[0] = new DateTime(d.Year, d.Month, 1);
             date[1] = date[0].AddMonths(1).AddMilliseconds(-1);
             return date;
         }
-
 
     }
 }

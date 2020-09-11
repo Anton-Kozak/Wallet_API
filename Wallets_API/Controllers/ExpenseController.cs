@@ -12,7 +12,6 @@ using Wallets_API.Data;
 using Wallets_API.DBClasses;
 using Wallets_API.DTO;
 using Wallets_API.Models;
-using Wallets_API.Models.CustomModels;
 using Wallets_API.Repository;
 
 namespace Wallets_API.Controllers
@@ -87,15 +86,34 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpGet("previousExpenses/{month}")]
-        public async Task<IActionResult> ShowPreviousExpenses(string userId, int month)
+        [HttpGet("previousExpenses/{date}")]
+        public async Task<IActionResult> ShowPreviousExpenses(string userId, DateTime date)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {
-                    var expenses = await _expenseRepository.ShowPreviousExpenses(user.WalletID, month * -1);
+                    var expenses = await _expenseRepository.ShowPreviousExpenses(user.WalletID, date);
+                    if (expenses != null)
+                    {
+                        return Ok(expenses);
+                    }
+                }
+                return BadRequest(null);
+            }
+            return Unauthorized();
+        }
+
+        [HttpGet("specificMonthsData/{firstMonth}/{secondMonth}")]
+        public async Task<IActionResult> ShowSpecifiedMonthsComparisonData(string userId, DateTime firstMonth, DateTime secondMonth)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null)
+                {
+                    var expenses = await _expenseRepository.ShowSpecifiedMonthsData(user.WalletID, firstMonth, secondMonth);
                     if (expenses != null)
                     {
                         return Ok(expenses);
@@ -114,7 +132,7 @@ namespace Wallets_API.Controllers
         }
 
 
-        
+
 
 
 
@@ -251,14 +269,14 @@ namespace Wallets_API.Controllers
         }
 
         [HttpGet("barExpenses/{month}")]
-        public async Task<IActionResult> ShowBarExpensesData(string userId, int month)
+        public async Task<IActionResult> ShowBarExpensesData(string userId, DateTime date)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID != 0)
                 {
-                    var result = await _expenseRepository.CreateBarExpensesData(user.WalletID, month * -1);
+                    var result = await _expenseRepository.CreateBarExpensesData(user.WalletID, date);
                     return Ok(result);
                 }
                 return BadRequest();
@@ -266,23 +284,23 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpGet("detailedStatistics")]
-        public async Task<IActionResult> GetDetailedWalletStatistics(string userId)
+        [HttpGet("detailedStatistics/{date}")]
+        public async Task<IActionResult> GetDetailedWalletStatistics(string userId, DateTime date)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID != 0)
                 {
-                    var result = await _expenseRepository.DetailedWalletStatistics(user.WalletID);
+                    var result = await _expenseRepository.DetailedWalletStatistics(user.WalletID, date);
                     return Ok(result);
                 }
             }
             return Unauthorized();
         }
 
-        [HttpGet("detailedCategoryStatistics/{categoryId}")]
-        public async Task<IActionResult> GetDetailedCategoryStatistics(string userId, int categoryId)
+        [HttpGet("detailedCategoryStatistics/{categoryId}/{date}")]
+        public async Task<IActionResult> GetDetailedCategoryStatistics(string userId, int categoryId, DateTime date)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
@@ -291,7 +309,7 @@ namespace Wallets_API.Controllers
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID != 0)
                 {
-                    var result = await _expenseRepository.DetailedCategoryStatistics(user.WalletID, categoryId, userId);
+                    var result = await _expenseRepository.DetailedCategoryStatistics(user.WalletID, categoryId, userId, date);
                     return Ok(result);
                 }
                 return BadRequest("User or wallet is not found");
@@ -299,8 +317,8 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpGet("detailedUserStatistics/{userToShowId}/{month}")]
-        public async Task<IActionResult> GetDetailedUserStatistics(string userId, string userToShowId, int month)
+        [HttpGet("detailedUserStatistics/{userToShowId}/{date}")]
+        public async Task<IActionResult> GetDetailedUserStatistics(string userId, string userToShowId, DateTime date)
         {
             //if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
@@ -308,7 +326,7 @@ namespace Wallets_API.Controllers
                 var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID != 0 && user.WalletID == currentUser.WalletID)
                 {
-                    var result = await _expenseRepository.DetailedUserStatistics(user.WalletID, userToShowId, month);
+                    var result = await _expenseRepository.DetailedUserStatistics(user.WalletID, userToShowId, date);
                     if (result != null)
                     {
                         return Ok(result);
@@ -320,15 +338,15 @@ namespace Wallets_API.Controllers
             //return Unauthorized();
         }
 
-        [HttpGet("getUserExpenses/{userToDisplayId}/{month}")]
-        public async Task<IActionResult> GetUserExpenses(string userId, string userToDisplayId, int month)
+        [HttpGet("getUserExpenses/{userToDisplayId}/{date}")]
+        public async Task<IActionResult> GetUserExpenses(string userId, string userToDisplayId, DateTime date)
         {
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userToDisplayId);
                 var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.WalletID == currentUser.WalletID)
                 {
-                    var result = await _expenseRepository.ShowUserExpenses(user.WalletID, userToDisplayId, month);
+                    var result = await _expenseRepository.ShowUserExpenses(user.WalletID, userToDisplayId, date);
                     if (result != null)
                     {
                         return Ok(result);
