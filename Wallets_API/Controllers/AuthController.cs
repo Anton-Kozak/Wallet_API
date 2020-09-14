@@ -79,14 +79,14 @@ namespace Wallets_API.Controllers
             {
                 return Ok(new
                 {
-                    token = GenerateJWTToken(user).Result,
+                    token = GenerateJWTToken(user, userForLoginDTO.Date).Result,
                     user
                 });
             }
             return Unauthorized();
         }
 
-        private async Task<string> GenerateJWTToken(ApplicationUser user)
+        private async Task<string> GenerateJWTToken(ApplicationUser user, DateTime clientDate)
         {
             var claims = new List<Claim>
             {
@@ -107,7 +107,8 @@ namespace Wallets_API.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(1),
+                //Expires = DateTime.Now.AddDays(1),
+                Expires = clientDate.AddHours(1),
                 SigningCredentials = creds,
                 Issuer = AuthOptions.ISSUER,
                 Audience = AuthOptions.AUDIENCE
