@@ -49,7 +49,7 @@ namespace Wallets_API.Controllers
                 };
                 //TODO: нужно ли здесь делать If?
                 var result = await _userManager.CreateAsync(userToCreate, userForRegister.Password);
-                if(await _roleManager.RoleExistsAsync(userForRegister.Role))
+                if (await _roleManager.RoleExistsAsync(userForRegister.Role))
                     await _userManager.AddToRoleAsync(userToCreate, userForRegister.Role);
                 else
                     await _userManager.AddToRoleAsync(userToCreate, "Member");
@@ -73,7 +73,7 @@ namespace Wallets_API.Controllers
         {
             var user = await _userManager.FindByNameAsync(userForLoginDTO.Username);
             if (user == null)
-                return Unauthorized();
+                return BadRequest("No such user found");
             var result = await _signInManager.CheckPasswordSignInAsync(user, userForLoginDTO.Password, false);
             if (result.Succeeded)
             {
