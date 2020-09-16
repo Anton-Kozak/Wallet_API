@@ -14,5 +14,7 @@ namespace Wallets_API.DTO
         public double AverageDailyExpense { get; set; }
         public List<CategoriesAndExpensesDTO> BarExpenses { get; set; }
         public double AmountOfMoneySpent { get; set; }
+        public MonthsComparisonData MonthCompareData { get; set; }
+        public List<LastMonthData> LastSixMonths { get; set; }
     }
 }

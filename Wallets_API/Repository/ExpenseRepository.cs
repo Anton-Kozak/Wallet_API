@@ -624,7 +624,6 @@ namespace Wallets_API.Repository
         public async Task<DetailedUserStatisticsDTO> DetailedUserStatistics(int walletId, string userId, DateTime d)
         {
             DetailedUserStatisticsDTO data = new DetailedUserStatisticsDTO();
-            //DateTime modifiedDate = d.AddMonths(1);
             DateTime[] date = GetDate(d);
             var monthStart = date[0];
             var monthEnd = date[1];
@@ -633,6 +632,8 @@ namespace Wallets_API.Repository
             GetUserTopCategories(walletId, userId, date, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
             if (largestExpense > 0)
             {
+                data.MonthCompareData = await GetCurrentAndPreviousMonthsDataForUser(walletId, userId, date);
+                data.LastSixMonths = await GetLastSixMonthsOfDataForUser(walletId, userId, date);
                 data.LargestExpense = largestExpense;
                 data.MostSpentCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
                 data.MostUsedCategory = await _context.ExpenseCategories.Where(e => e.Id == categoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
@@ -688,18 +689,16 @@ namespace Wallets_API.Repository
             return expenses;
         }
 
-        private async Task<MonthsComparisonData> GetCurrentAndPreviousMonthsDataForUser(int walletId, string userId)
+        private async Task<MonthsComparisonData> GetCurrentAndPreviousMonthsDataForUser(int walletId, string userId, DateTime[] date)
         {
-            var today = DateTime.Today;
-            var currentMonth = new DateTime(today.Year, today.Month, 1);
-            var startOfPreviousMonth = currentMonth.AddMonths(-1);
-            var endOfPreviousMonth = currentMonth.AddMilliseconds(-1);
-            var endOfCurrentMonth = currentMonth.AddMonths(1).AddMilliseconds(-1);
+            var currentMonthStart = date[0];
+            var currentMonthEnd = date[1];
 
+            var previousMonthStart = date[0].AddMonths(-1);
+            var previousMonthEnd = date[1].AddMonths(-1);
 
-
-            var lastMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= startOfPreviousMonth && e.CreationDate <= endOfPreviousMonth).SumAsync(e => e.MoneySpent);
-            var currentMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(e => e.MoneySpent);
+            var lastMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= previousMonthStart && e.CreationDate <= previousMonthEnd).SumAsync(e => e.MoneySpent);
+            var currentMonthData = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= currentMonthStart && e.CreationDate <= currentMonthEnd).SumAsync(e => e.MoneySpent);
 
             MonthsComparisonData data = new MonthsComparisonData
             {
@@ -710,17 +709,16 @@ namespace Wallets_API.Repository
             return data;
         }
 
-        private async Task<List<LastMonthData>> GetLastSixMonthsOfDataForUser(int walletId, string userId)
+        private async Task<List<LastMonthData>> GetLastSixMonthsOfDataForUser(int walletId, string userId, DateTime[] date)
         {
             CultureInfo ci = new CultureInfo("en-US");
             List<LastMonthData> lastMonths = new List<LastMonthData>();
-            var today = DateTime.Today;
-            var currentMonth = new DateTime(today.Year, today.Month, 1);
-            var monthToRemove = new DateTime(today.Year, today.Month, 1);
+            var currentMonth = date[0];
+            var monthToRemove = date[0];
             lastMonths.Add(new LastMonthData
             {
                 Month = DateTime.Now.AddMonths(0).ToString("MMMM", ci),
-                ExpenseSum = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= currentMonth && e.CreationDate <= currentMonth.AddMonths(1).AddMilliseconds(-1)).SumAsync(e => e.MoneySpent),
+                ExpenseSum = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.ExpenseUserId == userId && e.CreationDate >= currentMonth && e.CreationDate <= date[1]).SumAsync(e => e.MoneySpent),
             });
             DateTime startOfPreviousMonth;
             DateTime endOfPreviousMonth;
