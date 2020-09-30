@@ -89,9 +89,32 @@ namespace Wallets_API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPhoto(string userId)
         {
-            var user = await _userManager.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
-            var photoToReturn = await _context.Photos.Where(p => p.Id == user.UserPhotoId).FirstOrDefaultAsync();
-            return Ok(photoToReturn);
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null)
+                {
+                    var photoToReturn = await _context.Photos.Where(p => p.Id == user.UserPhotoId).FirstOrDefaultAsync();
+                    return Ok(photoToReturn);
+                }
+                return BadRequest(null);
+            }
+            return Unauthorized();
+        }
+
+        [HttpGet("/getUserPhotos")]
+        public async Task<IActionResult> GetUsersPhotos(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null)
+                {
+
+                }
+                return BadRequest(null);
+            }
+            return Unauthorized();
         }
 
 

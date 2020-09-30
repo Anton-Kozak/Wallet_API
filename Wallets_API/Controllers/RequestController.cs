@@ -87,7 +87,7 @@ namespace Wallets_API.Controllers
         [HttpPost("decline/{emailToDecline}")]
         public async Task<IActionResult> DeclineRequestToAccess(string userId, string emailToDecline)
         {
-            emailToDecline += "@mail.com";
+            //emailToDecline += "@mail.com";
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var result = await _repository.DeclineRequest(userId, emailToDecline);

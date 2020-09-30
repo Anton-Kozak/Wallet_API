@@ -19,5 +19,6 @@ namespace Wallets_API.DTO
         public UserForDisplayDTO[] WalletUsers { get; set; }
         public string WalletAdmin { get; set; }
         public double AmountOfMoneySpent { get; set; }
+        //public UserPhoto[] UserPhotos { get; set; }
     }
 }

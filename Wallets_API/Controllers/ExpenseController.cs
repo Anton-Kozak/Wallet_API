@@ -180,9 +180,10 @@ namespace Wallets_API.Controllers
         //    return Unauthorized();
         //}
 
-        [HttpPost("new")]
-        public async Task<IActionResult> CreateExpense(string userId, Expense newExpense)
+        [HttpPost("new/{offset}")]
+        public async Task<IActionResult> CreateExpense(string userId, Expense newExpense, int offset)
         {
+            newExpense.CreationDate = newExpense.CreationDate.AddHours(offset);
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -250,7 +251,7 @@ namespace Wallets_API.Controllers
         }
 
         [HttpPut("expenseEdit/{expenseId}")]
-        public async Task<IActionResult> EditExpense(string userId, int expenseId, ExpenseDTO expense)
+        public async Task<IActionResult> EditExpense(string userId, int expenseId, ExpenseDTO expenseToEdit)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
@@ -258,7 +259,7 @@ namespace Wallets_API.Controllers
 
                 if (user != null)
                 {
-                    var expToEdit = await _expenseRepository.EditExpense(userId, expense);
+                    var expToEdit = await _expenseRepository.EditExpense(userId, expenseToEdit);
                     if (expToEdit != null)
                         return Ok(expToEdit);
                     return BadRequest();
