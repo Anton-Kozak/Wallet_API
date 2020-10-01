@@ -128,6 +128,7 @@ namespace Wallets_API.Repository
         public async Task<ProfileDTO> GetProfileInfo(ProfileDTO profile, ApplicationUser user)
         {
             profile.MoneySpent = await _context.Expenses.Where(e => e.ExpenseUserId == user.Id).SumAsync(s => s.MoneySpent);
+            profile.DateJoined = user.DateJoined;
             var users = await _context.Users.Where(u => u.WalletID == user.WalletID && u.Id != user.Id).ToListAsync();
             profile.WalletUsers = new List<WalletUsersForProfileDTO>();
             foreach (var applicationUser in users)
