@@ -101,7 +101,7 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpPut("expenseEdit/{expenseId}")]
+        [HttpPost("expenseEdit/{expenseId}")]
         public async Task<IActionResult> EditExpense(string userId, int expenseId, ExpenseDTO expense)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)

@@ -131,12 +131,6 @@ namespace Wallets_API.Controllers
             return Ok(categories);
         }
 
-
-
-
-
-
-
         [HttpGet("getNameAndLimit")]
         public async Task<IActionResult> GetWalletTitleAndLimit(string userId)
         {
@@ -155,35 +149,9 @@ namespace Wallets_API.Controllers
         }
 
 
-        //[HttpGet("getCategoryExpenses/{categoryId}")]
-        //public async Task<IActionResult> GetCategoryExpenses(string userId, int categoryId)
-        //{
-        //    if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
-        //    {
-        //        if (categoryId != 0)
-        //        {
-        //            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-        //            if (user != null)
-        //            {
-        //                var result = await _expenseRepository.ShowCategoryExpenses(user.WalletID, categoryId);
-        //                if (result != null)
-        //                {
-        //                    return Ok(result);
-        //                }
-        //            }
-        //            return BadRequest("User has not been found");
-        //        }
-        //        return BadRequest("There is no category");
-
-        //    }
-
-        //    return Unauthorized();
-        //}
-
-        [HttpPost("new/{offset}")]
-        public async Task<IActionResult> CreateExpense(string userId, Expense newExpense, int offset)
+        [HttpPost("new")]
+        public async Task<IActionResult> CreateExpense(string userId, Expense newExpense)
         {
-            newExpense.CreationDate = newExpense.CreationDate.AddHours(offset);
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
             {
                 var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -250,7 +218,7 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpPut("expenseEdit/{expenseId}")]
+        [HttpPost("expenseEdit/{expenseId}")]
         public async Task<IActionResult> EditExpense(string userId, int expenseId, ExpenseDTO expenseToEdit)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)

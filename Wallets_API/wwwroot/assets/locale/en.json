@@ -4,7 +4,8 @@
         "Logout": "Logout",
         "EditWallet": "Edit Wallet",
         "EditProfile": "Edit Profile",
-        "Theme": "Dark Theme"
+        "DarkTheme": "Dark Theme",
+        "LightTheme": "Light Theme"
     },
     "Sidebar": {
         "Home": "Home",
@@ -20,6 +21,8 @@
     },
     "Expenses": {
         "Add": "Add Expense",
+        "Nothing": "No expenses",
+        "On": "on",
         "Edit": "Edit",
         "WalletTitle": "Wallet Title",
         "WalletLimit": "Budget",
@@ -131,7 +134,19 @@
         "September": "September",
         "October": "October",
         "November": "November",
-        "December": "December"
+        "December": "December",
+        "january": "january",
+        "february": "february",
+        "march": "march",
+        "april": "april",
+        "may": "may",
+        "june": "june",
+        "july": "july",
+        "august": "august",
+        "september": "september",
+        "october": "october",
+        "november": "november",
+        "december": "december"
     },
     "Admin": {
         "WalletUsers": "Wallet Users",
@@ -222,12 +237,13 @@
         "TitleMin": "Title should be at least 4 characters",
         "TitleMax": "Title should be no longer than 16 characters",
         "WalletMin": "Wallet title  should be at least 2 characters",
-        "WalletMax": "Wallet title  should be no longer 10 characters ",
+        "WalletMax": "Wallet title  should be no longer 16 characters ",
         "LimitMin": "Limit should be at least $10",
         "DescMin": "Description should be at least 4 characters",
         "DescMax": "Description should be no longer than 20 characters",
         "MoneyReq": "Money is required",
         "UserReq": "Username is required",
+        "UserPat": "Only English letters and digits",
         "UserMin": "Username should be at least 4 characters",
         "UserMax": "Username should be no longer than 10 characters",
         "PassReq": "Password is required",
@@ -249,6 +265,19 @@
         "k": "Click the cogwheel and you will find settings for the site. You can change language and theme.",
         "l": "Section with tips contains useful information for developing better spending habits.",
         "m": "Texts under certain sections and cards are static - I just haven't decided what to use :)",
-        "n": "All notifications are in English :("
+        "n": "All notifications are in English :(",
+        "p": "To change theme, click on Sun or Moon. the text will be later"
+    },
+    "Footer": {
+        "Top5": "Most Spent",
+        "CatComp": "Percentage of expenses made",
+        "BarStat": "Current categories expenses",
+        "Last6": "Dynamic of your expenses over 6 months",
+        "ExpComp": "See changes in your spending habits",
+        "NumberExp": "Number of expenses",
+        "TotalCat": "Total $ for category",
+        "PerDay": "Per day",
+        "TotalSum": "Total sum",
+        "Largest": "Largest Expense"
     }
 }
