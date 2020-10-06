@@ -166,6 +166,7 @@ namespace Wallets_API.Repository
 
             var walletTitle = await _context.Wallets.Where(w => w.Id == walletId).Select(w => w.Title).FirstOrDefaultAsync();
             var walletLimit = await _context.Wallets.Where(w => w.Id == walletId).Select(w => w.MonthlyLimit).FirstOrDefaultAsync();
+            var walletCurrency = await _context.Wallets.Where(w => w.Id == walletId).Select(w => w.Currency).FirstOrDefaultAsync() ?? "USD";
             var monthlyExpenses = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= currentMonth && e.CreationDate <= endOfCurrentMonth).SumAsync(m => m.MoneySpent);
 
             var categoryIDs = await _context.WalletsCategories.Where(wc => wc.WalletId == walletId).Select(wc => wc.CategoryId).ToListAsync();
@@ -174,6 +175,7 @@ namespace Wallets_API.Repository
             return new WalletToReturnDTO
             {
                 Title = walletTitle,
+                Currency = walletCurrency,
                 MonthlyLimit = walletLimit,
                 MonthlyExpenses = monthlyExpenses,
                 WalletCategories = categoryIDs
@@ -333,7 +335,7 @@ namespace Wallets_API.Repository
                         break;
                     }
                 }
-               
+
             }
             data.WalletUsers = users;
             return data;

@@ -71,6 +71,7 @@ namespace Wallets_API.Repository
                 }
                 wallet.Title = walletToEdit.Title;
                 wallet.MonthlyLimit = walletToEdit.MonthlyLimit;
+                wallet.Currency = walletToEdit.Currency;
                 _context.Wallets.Update(wallet);
                 if (await _context.SaveChangesAsync() > 0)
                 {
