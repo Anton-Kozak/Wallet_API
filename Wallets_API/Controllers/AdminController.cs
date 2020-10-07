@@ -82,7 +82,7 @@ namespace Wallets_API.Controllers
         }
 
 
-        [HttpDelete("expenseDelete/{expenseId}")]
+        [HttpPost("expenseDelete/{expenseId}")]
         public async Task<IActionResult> DeleteExpense(string userId, int expenseId)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)

@@ -41,7 +41,7 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpDelete("deleteNotification")]
+        [HttpPost("deleteNotification")]
         public async Task<IActionResult> DeleteNotification(string userId)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)

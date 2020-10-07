@@ -40,7 +40,7 @@ namespace Wallets_API.Repository
                                       Category = c.Title
                                   }).ToListAsync();
 
-            var reversedExpenses = expenses.Reverse<ExpenseForAdminDTO>().ToList();
+            var reversedExpenses = expenses.Reverse<ExpenseForAdminDTO>().OrderByDescending(e => e.CreationDate).ToList();
             return reversedExpenses;
         }
 

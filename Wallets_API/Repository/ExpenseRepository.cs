@@ -282,22 +282,6 @@ namespace Wallets_API.Repository
 
                 data.AmountOfMoneySpent = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= monthStart && e.CreationDate <= monthEnd).SumAsync(s => s.MoneySpent);
             }
-            //wallet members
-            //var users = await _context.Users.Where(u => u.WalletID == walletId).ToListAsync();
-            //var users = await (from u in _context.Users
-            //                   join p in _context.Photos
-            //                   on u.UserPhotoId equals p.Id
-            //                   where u.WalletID == walletId
-            //                   select new UserForDisplayDTO
-            //                   {
-            //                       Id = u.Id,
-            //                       Address = u.Address,
-            //                       Age = u.Age,
-            //                       DateJoined = u.DateJoined,
-            //                       Username = u.UserName,
-            //                       WalletID = u.WalletID,
-            //                       PhotoUrl = p.Url
-            //                   }).ToArrayAsync();
 
             var users = await (from u in _context.Users
                                where u.WalletID == walletId
