@@ -113,7 +113,7 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
         [Authorize(Policy = "Adult")]
-        [HttpPut("editWallet")]
+        [HttpPost("editWallet")]
         public async Task<IActionResult> EditWallet(string userId, WalletToReturnDTO walletToEdit)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)

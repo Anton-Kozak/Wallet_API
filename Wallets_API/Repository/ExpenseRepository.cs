@@ -446,29 +446,38 @@ namespace Wallets_API.Repository
             SpecifiedMonthsData data = new SpecifiedMonthsData();
             //FIRST MONTH
             data.FirstMonthTopFiveUsers = await GetTopMembers(walletId, firstDate[0], firstDate[1]);
-            int firstCategoryIdForSum, firstCategoryIdForUsage;
-            double firstLargestExpense;
-            GetWalletTopCategories(walletId, firstMonth, out firstCategoryIdForSum, out firstCategoryIdForUsage, out firstLargestExpense);
-            data.FirstMonthAverage = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= firstDate[0] && e.CreationDate <= firstDate[1]).AverageAsync(e => e.MoneySpent), 2);
-            data.FirstMonthMostSpent = await _context.ExpenseCategories.Where(e => e.Id == firstCategoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
-            data.FirstMonthMostUsed = await _context.ExpenseCategories.Where(e => e.Id == firstCategoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
-            data.FirstMonthTotal = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= firstDate[0] && e.CreationDate <= firstDate[1]).SumAsync(s => s.MoneySpent);
-            data.FirstMonthPreviousExpensesBars = await CreateBarExpensesData(walletId, firstMonth);
-            data.FirstLargestExpense = firstLargestExpense;
-            data.FirstMonthExpenses = await GetExpensesForSpecifiedMonthComparison(firstMonth, walletId);
-
+            if (data.FirstMonthTopFiveUsers.Count != 0)
+            {
+                int firstCategoryIdForSum, firstCategoryIdForUsage;
+                double firstLargestExpense;
+                GetWalletTopCategories(walletId, firstMonth, out firstCategoryIdForSum, out firstCategoryIdForUsage, out firstLargestExpense);
+                data.FirstMonthAverage = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= firstDate[0] && e.CreationDate <= firstDate[1]).AverageAsync(e => e.MoneySpent), 2);
+                data.FirstMonthMostSpent = await _context.ExpenseCategories.Where(e => e.Id == firstCategoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
+                data.FirstMonthMostUsed = await _context.ExpenseCategories.Where(e => e.Id == firstCategoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
+                data.FirstMonthTotal = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= firstDate[0] && e.CreationDate <= firstDate[1]).SumAsync(s => s.MoneySpent);
+                data.FirstMonthPreviousExpensesBars = await CreateBarExpensesData(walletId, firstMonth);
+                data.FirstLargestExpense = firstLargestExpense;
+                data.FirstMonthExpenses = await GetExpensesForSpecifiedMonthComparison(firstMonth, walletId);
+            }
+            else
+                data.FirstMonthTopFiveUsers = null;
             //SECOND MONTH
             data.SecondMonthTopFiveUsers = await GetTopMembers(walletId, secondDate[0], secondDate[1]);
-            int secondCategoryIdForSum, secondCategoryIdForUsage;
-            double secondLargestExpense;
-            GetWalletTopCategories(walletId, secondMonth, out secondCategoryIdForSum, out secondCategoryIdForUsage, out secondLargestExpense);
-            data.SecondMonthAverage = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= secondDate[0] && e.CreationDate <= secondDate[1]).AverageAsync(e => e.MoneySpent), 2);
-            data.SecondMonthMostSpent = await _context.ExpenseCategories.Where(e => e.Id == secondCategoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
-            data.SecondMonthMostUsed = await _context.ExpenseCategories.Where(e => e.Id == secondCategoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
-            data.SecondMonthTotal = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= secondDate[0] && e.CreationDate <= secondDate[1]).SumAsync(s => s.MoneySpent);
-            data.SecondMonthPreviousExpensesBars = await CreateBarExpensesData(walletId, secondMonth);
-            data.SecondLargestExpense = secondLargestExpense;
-            data.SecondMonthExpenses = await GetExpensesForSpecifiedMonthComparison(secondMonth, walletId);
+            if (data.SecondMonthTopFiveUsers.Count != 0)
+            {
+                int secondCategoryIdForSum, secondCategoryIdForUsage;
+                double secondLargestExpense;
+                GetWalletTopCategories(walletId, secondMonth, out secondCategoryIdForSum, out secondCategoryIdForUsage, out secondLargestExpense);
+                data.SecondMonthAverage = Math.Round(await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= secondDate[0] && e.CreationDate <= secondDate[1]).AverageAsync(e => e.MoneySpent), 2);
+                data.SecondMonthMostSpent = await _context.ExpenseCategories.Where(e => e.Id == secondCategoryIdForSum).Select(e => e.Title).FirstOrDefaultAsync();
+                data.SecondMonthMostUsed = await _context.ExpenseCategories.Where(e => e.Id == secondCategoryIdForUsage).Select(e => e.Title).FirstOrDefaultAsync();
+                data.SecondMonthTotal = await _context.Expenses.Where(e => e.FamilyWalletId == walletId && e.CreationDate >= secondDate[0] && e.CreationDate <= secondDate[1]).SumAsync(s => s.MoneySpent);
+                data.SecondMonthPreviousExpensesBars = await CreateBarExpensesData(walletId, secondMonth);
+                data.SecondLargestExpense = secondLargestExpense;
+                data.SecondMonthExpenses = await GetExpensesForSpecifiedMonthComparison(secondMonth, walletId);
+            }
+            else
+                data.SecondMonthTopFiveUsers = null;
             return data;
         }
 

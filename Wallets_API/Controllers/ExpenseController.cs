@@ -199,7 +199,7 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpDelete("expenseDelete/{expenseId}")]
+        [HttpPost("expenseDelete/{expenseId}")]
         public async Task<IActionResult> DeleteExpense(string userId, int expenseId)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
@@ -213,7 +213,7 @@ namespace Wallets_API.Controllers
                         return Ok(result.Message);
                     return BadRequest(result.Message);
                 }
-                return BadRequest("No user hsa been found");
+                return BadRequest("No user has been found");
             }
             return Unauthorized();
         }
