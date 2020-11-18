@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -15,7 +17,7 @@ using Wallets_API.Models;
 
 namespace Wallets_API.Controllers
 {
-    [Route("api/[controller]/{userId}")]
+    [Route("api/[controller]/{userId}/")]
     [ApiController]
     public class PhotoController : ControllerBase
     {
@@ -86,6 +88,43 @@ namespace Wallets_API.Controllers
             return Ok(photo);
         }
 
+        [HttpPost("mobilePhoto")]
+        public async Task<IActionResult> AddPhotoForUserMob(string userId, [FromForm]string file)
+        {
+            PhotoForCreationDTO photoForCreationDto = new PhotoForCreationDTO();
+            byte[] imageBytes = Convert.FromBase64String(file);
+            Stream stream = new MemoryStream(imageBytes);
+            var uploadResult = new ImageUploadResult();
+            var uploadParams = new ImageUploadParams()
+            {
+                File = new FileDescription("test", stream),
+                Transformation = new Transformation()
+                            .Width(300).Height(300).Crop("fill").Gravity("face")
+            };
+            uploadResult = _cloudinary.Upload(uploadParams);
+
+            photoForCreationDto.Url = uploadResult.Uri.ToString();
+            photoForCreationDto.PublicId = uploadResult.PublicId;
+
+            Photo photo = new Photo
+            {
+                Url = photoForCreationDto.Url,
+                PublicId = photoForCreationDto.PublicId,
+                DateAdded = photoForCreationDto.DateAdded,
+            };
+            await _context.Photos.AddAsync(photo);
+            await _context.SaveChangesAsync();
+
+
+
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            user.UserPhotoId = photo.Id;
+            await _context.SaveChangesAsync();
+            return Ok(photo);
+            //string file2 = file;
+        }
+
+
         [HttpGet]
         public async Task<IActionResult> GetPhoto(string userId)
         {
@@ -102,7 +141,7 @@ namespace Wallets_API.Controllers
             return Unauthorized();
         }
 
-        [HttpGet("/getUserPhotos")]
+        [HttpGet("getUserPhotos")]
         public async Task<IActionResult> GetUsersPhotos(string userId)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
