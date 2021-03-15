@@ -37,7 +37,7 @@ namespace Wallets_API.Repository
                                       ExpenseDescription = e.ExpenseDescription,
                                       CreationDate = e.CreationDate,
                                       MoneySpent = e.MoneySpent,
-                                      Category = c.Title
+                                      ExpenseCategory = c.Title
                                   }).ToListAsync();
 
             var reversedExpenses = expenses.Reverse<ExpenseForAdminDTO>().OrderByDescending(e => e.CreationDate).ToList();

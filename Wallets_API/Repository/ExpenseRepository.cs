@@ -677,6 +677,7 @@ namespace Wallets_API.Repository
             int categoryIdForSum, categoryIdForUsage;
             double largestExpense;
             GetUserTopCategories(walletId, userId, date, out categoryIdForSum, out categoryIdForUsage, out largestExpense);
+            //TODO: если в начале месяца, нет никаких трат, то здесь идет везде null, так как идет проверка на largestExpense > 0
             if (largestExpense > 0)
             {
                 data.MonthCompareData = await GetCurrentAndPreviousMonthsDataForUser(walletId, userId, date);

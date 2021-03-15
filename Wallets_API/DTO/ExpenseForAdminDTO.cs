@@ -13,6 +13,6 @@ namespace Wallets_API.DTO
         public string ExpenseDescription { get; set; }
         public DateTime CreationDate { get; set; }
         public double MoneySpent { get; set; }
-        public string Category { get; set; }
+        public string ExpenseCategory { get; set; }
     }
 }

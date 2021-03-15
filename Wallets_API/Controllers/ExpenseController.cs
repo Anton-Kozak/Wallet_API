@@ -187,6 +187,7 @@ namespace Wallets_API.Controllers
                             ExpenseDTO expenseToReturn = new ExpenseDTO();
                             expenseToReturn = _mapper.Map<ExpenseDTO>(newExpense);
                             expenseToReturn.UserName = user.UserName;
+                            expenseToReturn.ExpenseCategory = GetCategoryName(newExpense.ExpenseCategoryId);
                             expenseWithMessage.Expense = expenseToReturn;
                             return Ok(expenseWithMessage);
                         }

@@ -108,7 +108,7 @@ namespace Wallets_API.Controllers
             {
                 Subject = new ClaimsIdentity(claims),
                 //Expires = DateTime.Now.AddDays(1),
-                Expires = clientDate.AddHours(1),
+                Expires = clientDate.AddHours(1),//AddSeconds(5), //.AddHours(1),
                 SigningCredentials = creds,
                 Issuer = AuthOptions.ISSUER,
                 Audience = AuthOptions.AUDIENCE
