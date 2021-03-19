@@ -100,7 +100,7 @@ namespace Wallets_API
             {
                 options.AddPolicy("Adult", policy => policy.RequireRole("Adult"));
                 options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-                options.AddPolicy("VipOnly", policy => policy.RequireRole("VIP"));
+                options.AddPolicy("VIP", policy => policy.RequireRole("VIP"));
             });
 
 

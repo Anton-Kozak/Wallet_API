@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Wallets_API.DBClasses;
@@ -43,7 +44,7 @@ namespace Wallets_API.Controllers
                     if (await _repo.CreateWallet(walletToSave, currentUser))
                     {
                         //TODO: сделать разлогинивание чтобы вступили в действия смена роли
-                        await _userManager.AddToRoleAsync(currentUser, "Admin");
+                        await _userManager.AddToRolesAsync(currentUser, new List<string> { "Admin", "VIP" });
                         return Ok(currentUser);
                     }
                     return BadRequest("Error with creating a wallet");
@@ -52,6 +53,29 @@ namespace Wallets_API.Controllers
             }
             return Unauthorized();
         }
+
+        [HttpPost("premium")]
+        public async Task<IActionResult> BecomePremium(string userId)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier).Value == userId)
+            {
+                var currentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (currentUser != null)
+                {
+                    if (await _userManager.IsInRoleAsync(currentUser, "VIP"))
+                        return BadRequest("User is already VIP!");
+                    else
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole("VIP"));
+                        await _userManager.AddToRoleAsync(currentUser, "VIP");
+                        return Ok("Success! You are VIP");
+                    }
+                }
+                return BadRequest("No user has been found");
+            }
+            return Unauthorized();
+        }
+
 
         [HttpPost("addCategories")]
         public async Task<IActionResult> AddCategoriesToWallet(string userId, [FromBody]int[] categories)
